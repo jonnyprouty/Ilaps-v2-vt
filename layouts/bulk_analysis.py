@@ -6,6 +6,7 @@ from PySide2.QtCore import QEventLoop
 from widgets.tab_table import TabTable
 from widgets.pandas_model import PandasModel
 import error_popup
+import internal_std
 from widgets.drop_elems_window import ElemWindow
 from widgets.stat_export_select import DataTableWindow
 
@@ -79,6 +80,13 @@ class BulkAnalysis(QWidget):
         self.totSumCor = QPushButton('Total Sum Correction')
         layout.addWidget(self.totSumCor, 1, 7)
         self.totSumCor.clicked.connect(self.correctionTS)
+
+        self.loadISBtn = QPushButton('Load internal standard...')
+        self.loadISBtn.setToolTip('Read XRF or EPMA results (sample name + oxide wt%) and use one oxide, '
+                                  'e.g. SiO2 for Si28, as the internal standard. Reference materials '
+                                  'take their values from SRM.xlsx.')
+        layout.addWidget(self.loadISBtn, 0, 8)
+        self.loadISBtn.clicked.connect(self.load_internal_std)
 
         self.tssettingsBtn = QPushButton('TS settings')
         layout.addWidget(self.tssettingsBtn, 1, 8)
@@ -191,6 +199,93 @@ class BulkAnalysis(QWidget):
         self.table.table['Quantified'].setModel(model)
 
         self.table.show_tab(2)
+
+    def load_internal_std(self):
+        """
+        Build the internal standard sheet from an XRF/EPMA table and SRM.xlsx and attach it to the data.
+        """
+        data = self.parent.Data
+        if data is None or not data.names:
+            error_popup.notify('Import the data and select the peaks before loading the internal standard.')
+            return
+        calibrant = self.standard.currentText()
+        if calibrant not in data.srms.index:
+            error_popup.notify('Choose the calibrant standard (Standard box) first: it decides which '
+                               'elements can be internal standards.')
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, 'XRF or EPMA results (first column sample name, oxide wt% columns)', '',
+            'Tables (*.xlsx *.xls *.csv);;All files (*)')
+        if not path:
+            return
+        try:
+            table, counts = internal_std.read_table(path)
+        except Exception as e:
+            error_popup.notify(f'Could not read {path}: {e}')
+            return
+        pairs = internal_std.candidate_pairs(list(table.columns), list(data.isotope_names))
+        if not pairs:
+            error_popup.notify('None of the oxides in the table belongs to a measured isotope.')
+            return
+
+        # choose the internal standard(s)
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Internal standard')
+        lay = QVBoxLayout(dlg)
+        lay.addWidget(QLabel('Use as internal standard (the first ticked one is shown in the table):'))
+        boxes = []
+        for i, (iso, ox) in enumerate(pairs):
+            cb = QCheckBox(f'{iso} from {ox}  (ppm = wt% x {internal_std.ppm_per_wt_pct(ox):.1f})')
+            cb.setChecked(i == 0)
+            lay.addWidget(cb)
+            boxes.append(cb)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        lay.addWidget(buttons)
+        if not dlg.exec_():
+            return
+        chosen = [p for p, cb in zip(pairs, boxes) if cb.isChecked()]
+        if not chosen:
+            return
+
+        try:
+            sheet, source = internal_std.build_sheet(data.names, calibrant, chosen, table, data.srms)
+        except ValueError as e:
+            error_popup.notify(e)
+            return
+
+        if data.param is None:
+            data.param = mse.Param.__new__(mse.Param)
+            data.param.path, data.param.logger = None, data.logger
+            data.param.peak_names, data.param.ts_coef = list(data.names), {}
+        data.param.is_coef = sheet
+        if data.logger is not None:
+            data.logger.info(f'Internal standard loaded from {path}: '
+                             + ', '.join(f'{i} from {o}' for i, o in chosen))
+
+        n_srm = sum(v == 'SRM.xlsx' for v in source.values())
+        repeats = [f'{k} ({v})' for k, v in counts.items() if v > 1 and k in sheet.index]
+        msg = (f"Internal standard loaded: {', '.join(f'{i} from {o}' for i, o in chosen)} for "
+               f"{len(sheet)} samples ({n_srm} reference materials from SRM.xlsx, "
+               f"{len(sheet) - n_srm} from the table).")
+        if repeats:
+            msg += '\nAveraged over repeat rows: ' + ', '.join(repeats) + '.'
+        param_path = self.parent.welcome.dataEntry2.text().strip()
+        box = QMessageBox(self)
+        box.setWindowTitle('Internal standard')
+        box.setText(msg + '\n\nNext: Internal Std Correction.')
+        box.setDetailedText(sheet.to_string())
+        save = None
+        if param_path:
+            save = box.addButton('Also save to the Param file', QMessageBox.AcceptRole)
+        box.addButton(QMessageBox.Ok)
+        box.exec_()
+        if save is not None and box.clickedButton() is save:
+            try:
+                internal_std.save_to_param(param_path, sheet)
+            except Exception as e:
+                error_popup.notify(f'Could not save to {param_path}: {e}')
 
     def correctionIS(self):
         """

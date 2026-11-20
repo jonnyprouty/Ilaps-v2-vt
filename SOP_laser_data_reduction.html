@@ -43,7 +43,7 @@ li { margin:3px 0; }
 <main><h1 id="sop-la-icp-ms-spot-data-reduction-in-ilaps">SOP: LA-ICP-MS spot data reduction in Ilaps</h1>
 <p><strong>Scope:</strong> bulk (spot) analyses from our Agilent ICP-MS, reduced to concentrations (µg/g, ppm) in Ilaps-v2. Imaging and line scans are not covered.
 <strong>Applies to:</strong> everyone reducing laser data in the lab.
-<strong>Written:</strong> 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Section 4 updated 2026-11-20 for the Make Iolite log tool.</p>
+<strong>Written:</strong> 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps.</p>
 <hr />
 <h2 id="1-which-procedure-do-i-follow">1. Which procedure do I follow?</h2>
 <div class="tbl"><table>
@@ -140,7 +140,7 @@ li { margin:3px 0; }
 </tr>
 <tr>
 <td><code>PROJECT_YYYY-MM-DD_PARAM.xlsx</code></td>
-<td>Peak names, total-sum factors for our isotopes (including Ca43, which Ilaps' defaults lack), and an empty internal standard sheet (filled in section 7.5).</td>
+<td>Peak names, total-sum factors for our isotopes, and an empty internal standard sheet (filled in Ilaps, section 7.5).</td>
 <td>Import Parameters</td>
 </tr>
 <tr>
@@ -156,8 +156,7 @@ li { margin:3px 0; }
 </tbody>
 </table></div>
 <h3 id="43-internal-standard">4.3 Internal standard</h3>
-<p>The Param file is ready for total-sum correction. For internal standard correction, fill its internal standard sheet once the XRF or EPMA data are available (section 7.5); this step needs the Ilaps environment.</p>
-<p><code>ilaps/bin/python tools/ilaps_prep.py combine "/path/to/run folder" --prefix PROJECT</code> does the same as the tool on a whole folder, from the Ilaps environment.</p>
+<p>The Param file is ready for total-sum correction. For internal standard correction, load the XRF or EPMA values in Ilaps once they are available (section 7.5).</p>
 <h3 id="44-check-the-tools-report">4.4 Check the tool's report</h3>
 <p>The report lists every run with its ablation start and length, and the <strong>Iolite Start time</strong> to enter in Ilaps (normally <code>0.60</code>). Some runs are marked <code>&lt;-- check</code>:</p>
 <ul>
@@ -176,11 +175,8 @@ li { margin:3px 0; }
 <li>The Agilent export of the whole acquisition (<code>.csv</code>, header intact).</li>
 <li>The laser's Iolite log for the same sequence (<code>.Iolite.csv</code>). Each spot's <strong>Comment</strong> is its peak name, so name spots in the laser software exactly as in section 3.</li>
 </ul>
-<h3 id="52-param-file">5.2 Param file</h3>
-<p>A Param file is needed for internal standard correction and for correct total-sum factors (Ilaps' built-in defaults include Ca44 but not Ca43, so Ca would be dropped from the total). Create one from the Iolite log:</p>
-<pre><code class="language-bash">ilaps/bin/python tools/ilaps_prep.py internal-std --param &quot;/path/RUN_PARAM.xlsx&quot; --iolite &quot;/path/RUN.Iolite.csv&quot;
-</code></pre>
-<p>This writes names, total-sum factors and an empty internal standard sheet. To fill in XRF or EPMA internal standards at the same time, add <code>--calibrant</code>, <code>--epma</code> and <code>--is</code> (section 7).</p>
+<h3 id="52-param-file-optional">5.2 Param file (optional)</h3>
+<p>Not needed: import without one and tick <strong>Set names from iolite</strong> (section 6.2). Ilaps then uses its built-in total-sum factors (all common isotopes, including Ca43), and the internal standard is loaded in Ilaps (section 7.5).</p>
 <h3 id="53-start-time">5.3 Start time</h3>
 <p>On the Iolite tab in Ilaps, <strong>Start time</strong> tells Ilaps where the Iolite log starts on the ICP-MS time axis. Set it to the time (s) of the <strong>first reading where the first spot's signal rises</strong> above the blank:</p>
 <ol>
@@ -232,12 +228,12 @@ li { margin:3px 0; }
 </tr>
 </tbody>
 </table></div>
-<p>Click <strong>Import</strong>. Ilaps switches to <em>Data analysis</em> and plots the signal. Use a Param file made by the tools (4.2 or 5.2). A Param file missing any of its three sheets (<code>names</code>, <code>internal standard</code>, <code>total sum</code>) crashes the import.</p>
+<p>Click <strong>Import</strong>. Ilaps switches to <em>Data analysis</em> and plots the signal. Use the Param file made by Make Iolite log (4.2), or none (5.2). A Param file missing any of its three sheets (<code>names</code>, <code>internal standard</code>, <code>total sum</code>) crashes the import.</p>
 <h3 id="62-peak-selection-data-analysis-screen">6.2 Peak selection (Data analysis screen)</h3>
 <ol>
 <li>Choose the <strong>Iolite</strong> tab.</li>
 <li><strong>Start time:</strong> Case A: the value in the tool's report (<code>0.60</code>). Case B: see 5.3.</li>
-<li>Leave <strong>Set names from iolite</strong> unchecked; names then come from the Param file. (Checking it uses the Iolite comments instead; for Case A both are identical.)</li>
+<li><strong>Set names from iolite:</strong> leave unchecked when a Param file was imported (names then come from it); tick it when there is no Param file (Case B, 5.2). For Case A both give the same names.</li>
 <li>Leave <strong>Skip background</strong> and <strong>Skip peak</strong> empty. A non-zero <em>Skip peak</em> halved our averages in testing: the peak edges get treated as background.</li>
 <li>Click <strong>Select</strong>. Check the plot: one start/end pair per spot, on the edges of each peak. Tick <strong>log axes</strong> to see the blanks.</li>
 </ol>
@@ -324,7 +320,7 @@ li { margin:3px 0; }
 <ul>
 <li>An element <strong>measured by EPMA on the same phase or glass</strong> that the laser spot sampled, ideally at the same spot location.</li>
 <li>High concentration, homogeneous, and with a precise EPMA value: usually <strong>Si</strong> (SiO2) or <strong>Ca</strong> (CaO); Al or Mg can also work.</li>
-<li><strong>Measured by ICP-MS</strong> in your method (we measure Si28 and Ca43) and <strong>present in <code>SRM.xlsx</code> for your calibrant</strong>. The tool refuses a calibrant without a value for the IS element.</li>
+<li><strong>Measured by ICP-MS</strong> in your method (we measure Si28 and Ca43) and <strong>present in <code>SRM.xlsx</code> for your calibrant</strong>. Ilaps refuses a calibrant without a value for the IS element.</li>
 <li>Using two (e.g. Si28 and Ca43) gives two independent results; agreement between them is a useful check.</li>
 </ul>
 <h3 id="73-prepare-the-epma-or-xrf-table">7.3 Prepare the EPMA or XRF table</h3>
@@ -332,7 +328,7 @@ li { margin:3px 0; }
 <ul>
 <li><strong>First column:</strong> sample name, spelled exactly like the peak names (<code>VG-A1</code>).</li>
 <li><strong>Other columns:</strong> oxides in <strong>wt%</strong>, with these headers: <code>SiO2</code>, <code>CaO</code>, <code>Al2O3</code>, <code>MgO</code>, <code>TiO2</code>, <code>FeO</code>, <code>Fe2O3</code>, <code>Na2O</code>, <code>K2O</code>, <code>MnO</code>, <code>P2O5</code>, <code>Cr2O3</code>. Common variants are understood too: <code>Fe2O3T</code>, <code>Fe2O3(T)</code>, <code>FeO*</code>, <code>SiO2 (wt%)</code>. Other columns (e.g. <code>LOI</code>, <code>Total</code>) are ignored.</li>
-<li>Several rows with the same name (repeat EPMA points or XRF replicates) are <strong>averaged</strong> by the tool.</li>
+<li>Several rows with the same name (repeat EPMA points or XRF replicates) are <strong>averaged</strong>.</li>
 <li>Reference materials do not need EPMA rows: their values come from <code>SRM.xlsx</code>.</li>
 </ul>
 <p>Example:</p>
@@ -363,7 +359,7 @@ li { margin:3px 0; }
 </tbody>
 </table></div>
 <h3 id="74-oxide-element-conversion">7.4 Oxide → element conversion</h3>
-<p>The tool converts automatically. For reference, element ppm = oxide wt% × factor:</p>
+<p>Ilaps converts automatically. For reference, element ppm = oxide wt% × factor:</p>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -431,22 +427,18 @@ li { margin:3px 0; }
 </tbody>
 </table></div>
 <p>Example: 52.6 wt% SiO2 → 52.6 × 4674 = 245,900 ppm Si.</p>
-<h3 id="75-write-the-internal-standard-sheet">7.5 Write the internal standard sheet</h3>
-<pre><code class="language-bash">ilaps/bin/python tools/ilaps_prep.py internal-std \
-    --param &quot;/path/PROJECT_2026-10-28_PARAM.xlsx&quot; \
-    --calibrant BCR-2 \
-    --epma &quot;/path/epma.xlsx&quot; \
-    --is Si28=SiO2 --is Ca43=CaO
-</code></pre>
-<ul>
-<li><code>--calibrant</code> must be the same standard you will pick in Ilaps.</li>
-<li><code>--epma</code> and <code>--xrf</code> are the same option; use whichever describes your table.</li>
-<li><code>--is ISOTOPE=OXIDE</code>: the isotope exactly as in the data's column names (<code>Si28</code>, not <code>Si</code>), and the EPMA oxide it comes from.</li>
-<li>The tool stops and lists any peak that has no EPMA value and no <code>SRM.xlsx</code> value. Fix the EPMA table (usually a spelling difference) and rerun.</li>
-<li>Rerunning replaces the internal standard sheet; names and total-sum sheets are kept.</li>
-<li>Ilaps reads the Param file at import: after updating it, <strong>import again</strong> in Ilaps.</li>
-</ul>
-<p><strong>How Ilaps matches the sheet to the spots</strong> (lab version of Ilaps, with our imgMS fork): the tool writes one row per peak in run order, with every calibrant peak left out, and Ilaps uses those rows in order. A sheet typed by hand can instead have <strong>one row per sample name</strong>, in any order; Ilaps then matches rows by name, and extra rows (such as the calibrant) are ignored:</p>
+<h3 id="75-load-the-internal-standard-in-ilaps">7.5 Load the internal standard (in Ilaps)</h3>
+<p>On <strong>Bulk analysis</strong>, after selecting the peaks:</p>
+<ol>
+<li>Choose the calibrant in <strong>Standard</strong> first: it decides which elements can be internal standards.</li>
+<li>Click <strong>Load internal standard...</strong> and pick the XRF or EPMA table (7.3).</li>
+<li>Tick the isotope and oxide to use (e.g. <em>Si28 from SiO2</em>; Si is listed first). Ticking two (e.g. Si28 and Ca43) gives two independent results.</li>
+<li>Ilaps converts oxide wt% to element ppm (7.4), takes the reference materials' values from <code>SRM.xlsx</code>, and stops with a list if any sample has no value (usually a spelling difference between the table and the peak names) or if the calibrant has no value for that element.</li>
+<li>The summary lists how many samples came from the table and from <code>SRM.xlsx</code>; <em>Show Details</em> shows every value. If a Param file was imported, <strong>Also save to the Param file</strong> keeps the values for the next session.</li>
+<li>Click <strong>Internal Std Correction</strong>. The IS-corrected IS element of each sample equals its table value (7.7).</li>
+</ol>
+<p>No re-import is needed. Loading again replaces the values.</p>
+<p><strong>Typing the sheet instead:</strong> the Param file's <em>internal standard</em> sheet can also be filled in a spreadsheet, with <strong>one row per sample name</strong> in any order (element ppm, header row = isotopes; extra rows such as the calibrant are ignored), then imported again:</p>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -473,8 +465,7 @@ li { margin:3px 0; }
 </tr>
 </tbody>
 </table></div>
-<p>(header row = isotopes; values in element ppm; secondary standards use their <code>SRM.xlsx</code> values.)</p>
-<p>Different values for repeat spots of one sample (e.g. EPMA of each spot) only work in the one-row-per-peak, run-order form. If the sheet fits neither form (a sample missing, a blank value, rows out of order), <strong>Internal Std Correction</strong> stops with a message saying what does not match, rather than applying values to the wrong spots. The original Ilaps (upstream imgMS 0.2.12) uses rows by position only and gives no warning; with it, use the tool.</p>
+<p>Different values for repeat spots of one sample (e.g. EPMA of each spot) need one row per peak in run order, with every calibrant peak left out. If the sheet fits neither form (a sample missing, a blank value, rows out of order), <strong>Internal Std Correction</strong> stops with a message saying what does not match, rather than applying values to the wrong spots. The original Ilaps (upstream imgMS 0.2.12) uses rows by position only and gives no warning.</p>
 <h3 id="76-total-sum-correction-when-there-is-no-epma-or-xrf">7.6 Total sum correction (when there is no EPMA or XRF)</h3>
 <p>Assumes the major-element oxides of each spot add up to 100%. Good for anhydrous silicates and glasses; poor for hydrous, carbonate-, sulfide- or halogen-rich material. For fused beads, see 8.3 and 8.4 first.</p>
 <p>In <strong>TS settings</strong>:</p>
@@ -555,7 +546,7 @@ li { margin:3px 0; }
 <tr>
 <td><strong>XRF of the same bead (recommended)</strong></td>
 <td>Rock concentrations, on the same basis as the XRF report</td>
-<td>Use the XRF table directly with <code>--xrf</code> (7.5). Check whether your XRF report is volatile-free (ignited) or as-received, and state that basis with the results.</td>
+<td>Load the XRF table directly (7.5). Check whether your XRF report is volatile-free (ignited) or as-received, and state that basis with the results.</td>
 </tr>
 <tr>
 <td><strong>EPMA on the bead glass</strong></td>
@@ -581,7 +572,7 @@ li { margin:3px 0; }
 <li>An EPMA total far below 100% on a bead is expected: Li and B are not measured by EPMA.</li>
 </ul>
 <h3 id="85-checking-standards-on-the-right-basis">8.5 Checking standards on the right basis</h3>
-<p>The tool fills the standards' internal standard values from <code>SRM.xlsx</code> (as-received powder), so <strong>IS-corrected standards come out as-received</strong> and compare directly with <code>SRM.xlsx</code>.</p>
+<p>Ilaps fills the standards' internal standard values from <code>SRM.xlsx</code> (as-received powder), so <strong>IS-corrected standards come out as-received</strong> and compare directly with <code>SRM.xlsx</code>.</p>
 <p><strong>Total-sum-corrected standards come out volatile-free.</strong> Before comparing, convert the reference value:</p>
 <p><code>volatile-free reference = SRM.xlsx value × 100 ÷ (sum of the standard's major oxides, wt%)</code></p>
 <p>Oct 2026 example: SBC-1 (a shale) has major oxides summing to about 89%. Its total-sum result read 1.10× the <code>SRM.xlsx</code> values, as expected for a factor of 100 ÷ 89 = 1.12. With the Si internal standard it read 0.97×. AGV-2a and BCR-2 (sums 98–100%) agree either way.</p>
@@ -640,19 +631,19 @@ li { margin:3px 0; }
 <td>Make names match <code>SRM.xlsx</code> exactly (case, hyphens)</td>
 </tr>
 <tr>
-<td>Internal Std Correction does nothing</td>
-<td>Internal standard sheet empty</td>
-<td>Run the tool (7.5) and re-import</td>
+<td>Internal Std Correction says the internal standard is missing</td>
+<td>No values loaded</td>
+<td>Load internal standard (7.5)</td>
 </tr>
 <tr>
 <td>Internal Std Correction shows "Internal standard sheet does not match the peaks"</td>
 <td>A sample has no row, a value is blank, or per-spot rows are out of run order</td>
-<td>Follow the message; regenerate with the tool (7.5) and re-import</td>
+<td>Follow the message; load the internal standard again (7.5)</td>
 </tr>
 <tr>
 <td>IS-corrected IS element ≠ EPMA value</td>
-<td>Wrong value in the internal standard sheet (or rows misaligned, with the original Ilaps)</td>
-<td>Regenerate with the tool (7.5)</td>
+<td>Wrong value in the table or sheet (or rows misaligned, with the original Ilaps)</td>
+<td>Check the table; load again (7.5)</td>
 </tr>
 <tr>
 <td>Report / Export stats do nothing</td>
@@ -690,7 +681,7 @@ li { margin:3px 0; }
 <td>Compare on the same basis (8.5)</td>
 </tr>
 <tr>
-<td><code>internal-std</code> tool: "no SiO2 … value" for an EPMA/XRF sample</td>
+<td>Load internal standard: "no SiO2 in the table" for a sample</td>
 <td>Name in the table differs from the peak name, or header not recognised</td>
 <td>Match spelling exactly; use oxide headers as in 7.3</td>
 </tr>
@@ -699,17 +690,12 @@ li { margin:3px 0; }
 <hr />
 <h2 id="appendix-a-worked-example-victor-samples-28-oct-2026">Appendix A: Worked example (Victor samples, 28 Oct 2026)</h2>
 <pre><code class="language-bash">cd ~/Tools/Ilaps-v2
-python3 tools/make_iolite.py &quot;/run/media/jprouty/VT EPMA/Victor Samples&quot; --prefix Victor   # or use the menu
-# when XRF (or EPMA) data is available; use --epma for EPMA tables:
-ilaps/bin/python tools/ilaps_prep.py internal-std \
-    --param &quot;/run/media/jprouty/VT EPMA/Victor Samples/Victor_2026-10-28_PARAM.xlsx&quot; \
-    --calibrant BCR-2 --xrf &quot;/path/to/Victor_XRF.xlsx&quot; --is Si28=SiO2
 python GUI.py
 </code></pre>
 <ul>
-<li>Import: <code>Victor_2026-10-28_combined.csv</code>, csv, Agilent, <code>Victor_2026-10-28_PARAM.xlsx</code>, <code>Victor_2026-10-28_synthetic_Iolite.csv</code>.</li>
+<li>Home: <strong>Import single-spot runs...</strong>, select all runs in <code>Victor Samples</code>, name <code>Victor</code>, choose the 2026-10-28 day (or import the existing <code>Victor_2026-10-28_*</code> files).</li>
 <li>Data analysis: Iolite tab, Start time <code>0.60</code>, Select. Expect 54 peaks.</li>
-<li>Bulk analysis: Detection limit <code>all</code>, Despiking <code>True</code>, Method <code>intensity</code>, Standard <code>BCR-2</code>, Drift Correction off. Then Average, Quantification, then Internal Std Correction (or TS settings, then Total Sum Correction).</li>
+<li>Bulk analysis: Detection limit <code>all</code>, Despiking <code>True</code>, Method <code>intensity</code>, Standard <code>BCR-2</code>, Drift Correction off. Then Average, Quantification, <strong>Load internal standard...</strong> with the XRF table (Si28 from SiO2), Internal Std Correction (or TS settings, then Total Sum Correction).</li>
 <li>These are fused beads: never report Li; for total sum, tick Li7 in TS settings (section 8).</li>
 <li>Export, then Export stats, then Report, then Export to a second file.</li>
 <li>Oct 27 data: same steps with the <code>2026-10-27</code> files and <code>W-2b</code> as calibrant (no secondary standard that day).</li>
@@ -717,9 +703,8 @@ python GUI.py
 <h2 id="appendix-b-files-and-tools">Appendix B: Files and tools</h2>
 <ul>
 <li><code>tools/make_iolite.py</code> (menu: <strong>Make Iolite log</strong>): combines single-spot runs and writes the synthetic Iolite log and Param file (section 4). Python 3 standard library only, so it can be copied to any computer. Menu launcher: <code>tools/make_iolite.desktop</code>.</li>
-<li><code>tools/ilaps_prep.py</code>: <code>internal-std</code> (sections 5.2, 7.5, 8.3), and <code>combine</code> (same as <code>make_iolite.py</code> on a folder, section 4.3). Run <code>ilaps/bin/python tools/ilaps_prep.py internal-std --help</code> for all options.</li>
 <li><code>SRM.xlsx</code>: reference material values (section 2).</li>
-<li><code>default_sum_koef.xlsx</code>: Ilaps' built-in total-sum factors, used only when no Param file is loaded.</li>
+<li><code>default_sum_koef.xlsx</code>: Ilaps' built-in total-sum factors (all common isotopes), used when no Param file is loaded.</li>
 <li><code>log.txt</code>: Ilaps' processing log (settings used, warnings).</li>
 </ul></main>
 </div></body></html>

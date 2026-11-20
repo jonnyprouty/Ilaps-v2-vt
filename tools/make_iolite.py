@@ -10,7 +10,7 @@ Outputs, per acquisition day (PREFIX defaults to the folder name):
   PREFIX_YYYY-MM-DD_combined.csv          the runs joined in acquisition order (counts unchanged)
   PREFIX_YYYY-MM-DD_synthetic_Iolite.csv  the Iolite log for that file (spot names = run names)
   PREFIX_YYYY-MM-DD_PARAM.xlsx            Ilaps Param file: spot names, total-sum factors, empty
-                                          internal standard sheet (fill with ilaps_prep.py internal-std)
+                                          internal standard sheet (filled in Ilaps: Load internal standard)
   PREFIX_YYYY-MM-DD_run_order.txt         one line per spot: name, times, source file
 
 The log is not a real laser log: each spot's on/off times are detected from the run's own

@@ -1,12 +1,12 @@
 # SOP: LA-ICP-MS spot data reduction in Ilaps
 
-**Scope:** bulk (spot) analyses from our Agilent ICP-MS, reduced to concentrations (µg/g, ppm) in Ilaps-v2. Imaging and line scans are not covered.
-**Applies to:** everyone reducing laser data in the lab.
+**Scope:** bulk (spot) analyses from the laboratory's Agilent ICP-MS, reduced to concentrations (µg/g, ppm) in Ilaps-v2. Imaging and line scans are not covered.
+**Applies to:** all reduction of laser ablation data in the laboratory.
 **Written:** 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps.
 
 ---
 
-## 1. Which procedure do I follow?
+## 1. Choice of procedure
 
 | How the data was collected | Procedure |
 |---|---|
@@ -27,11 +27,11 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
    source ilaps/bin/activate
    python GUI.py
    ```
-2. **Lab version of imgMS.** Ilaps does its calculations with the `imgMS` package. We use the lab fork (`jonnyprouty/imgMS-vt`), which matches the internal standard sheet by name (7.5), keeps the last data row of Agilent files, and works with pandas 2. `ilaps/bin/pip install -r requirements.txt` installs it. To work on imgMS itself, clone it to `~/Tools/imgMS-vt` and install that copy instead (edits then take effect immediately):
+2. **Laboratory version of imgMS.** Ilaps performs its calculations with the `imgMS` package. The laboratory uses a fork (`jonnyprouty/imgMS-vt`), which matches the internal standard sheet by name (7.5), keeps the last data row of Agilent files, and works with pandas 2. `ilaps/bin/pip install -r requirements.txt` installs it. To work on imgMS itself, clone it to `~/Tools/imgMS-vt` and install that copy instead (edits then take effect immediately):
    ```bash
    ilaps/bin/pip install --no-deps -e ~/Tools/imgMS-vt
    ```
-   Check: `ilaps/bin/python -c "import imgMS; print(imgMS.__file__)"` should point into `imgMS-vt`. With the original imgMS (0.2.12), pandas must be older than 2.0 (`ilaps/bin/pip install "pandas<2"`), or **Report** and **Export stats** crash without showing an error.
+   Check: `ilaps/bin/python -c "import imgMS; print(imgMS.__file__)"` returns a path in `imgMS-vt`. With the original imgMS (0.2.12), pandas must be older than 2.0 (`ilaps/bin/pip install "pandas<2"`), otherwise **Report** and **Export stats** fail without an error message.
 3. **Reference materials (`SRM.xlsx`).** Ilaps reads `SRM.xlsx` in the Ilaps folder (not the copy in `test_data/`). Before a new reference material can be used:
    - Add one row per material. Column A is the name, spelled exactly as the peaks will be named (e.g. `BCR-2`, `AGV-2a`, `W-2b`).
    - Element columns (`Si`, `Ca`, `Fe`, …) are in **µg/g (ppm) of the element**, not oxide wt%. Convert oxides with the factors in section 7.4.
@@ -44,14 +44,14 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
 
 ## 3. Data requirements (plan these at the instrument)
 
-- **Gas blank before every spot.** At least about 30 s with the laser off; our method uses about 60 s. Ilaps measures each spot's background from the readings just before and just after it.
-- **Calibrant.** At least 2 spots of the reference material you will calibrate on, ideally at the **start, middle and end** of the session.
+- **Gas blank before every spot.** At least about 30 s with the laser off; the current method uses about 60 s. Ilaps measures each spot's background from the readings just before and just after it.
+- **Calibrant.** At least 2 spots of the calibration reference material, ideally at the **start, middle and end** of the session.
 - **Secondary standards.** At least one other reference material treated as an unknown, to check accuracy (section 9).
 - **Same session.** Calibrate samples only against standards from the same day and session. Process each day separately.
 - **Names.** Peak names must match exactly. Use the same spelling for repeats of a sample (`VG-A1` three times, not `VG-A1`, `VG A1`, `vg-a1`). Standards must match their `SRM.xlsx` row name.
 - **Case A file names:** `YYYYMMDD-HHMM-NAME.txt`, e.g. `20261028-1407-USGS-BCR-2.txt`. The peak name is taken from everything after the date and time, with `USGS-` removed.
 - **Keep the Agilent header.** Export with the 3 header lines and the "Printed:" footer intact. Files with the header removed are skipped.
-- **One isotope per element** for major elements, if you intend to use total sum correction (section 7.6).
+- **One isotope per element** for major elements when total sum correction is planned (section 7.6).
 
 ---
 
@@ -59,7 +59,7 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
 
 Ilaps calibrates within one loaded file, so single-spot runs must first be joined into one file per day, with an Iolite log that tells Ilaps where each spot is and a Param file. The **Make Iolite log** tool (`tools/make_iolite.py`) makes all three.
 
-### 4.0 Quickest way: from inside Ilaps
+### 4.0 From within Ilaps (standard route)
 
 On the **Home** screen, click **Import single-spot runs...**, select the runs (Ctrl+A selects a whole folder; non-run files are skipped) and enter an output name. Ilaps runs Make Iolite log, writes the files of section 4.2 next to the runs, asks which day to load if the runs span several days, fills in the import fields, sets the Iolite tab and Start time on *Data analysis*, shows the tool's report (section 4.4; open *Show Details*), and imports. Continue with **Select** (section 6.2). To load another day later, use the files it wrote with the normal import (section 6.1).
 
@@ -74,7 +74,7 @@ Use this outside Ilaps, or on a computer without the Ilaps environment (it needs
    ```
 2. In the file window, go to the run folder and select the runs (Ctrl+A selects them all; files that are not Agilent runs, and earlier combined files, are skipped). Runs from several days are split into one set per day.
 3. Enter the output name (`PROJECT`; the default is the folder name) and click OK.
-4. A report window opens (section 4.4). The outputs are written next to the runs; the original files are never modified. If you cancel either window, nothing is written and the terminal says so.
+4. A report window opens (section 4.4). The outputs are written next to the runs; the original files are never modified. If either window is cancelled, nothing is written and a message is printed in the terminal.
 
 From the command line instead (same result, report printed in the terminal):
 
@@ -92,9 +92,9 @@ On another Linux computer: copy `tools/make_iolite.py`, and for the menu entry c
 |---|---|---|
 | `PROJECT_YYYY-MM-DD_combined.csv` | All runs of that day joined in acquisition order (sorted by the instrument's *Acquired* time, not the file name). Counts are copied unchanged; only the time column is made continuous. | Import Analysis |
 | `PROJECT_YYYY-MM-DD_synthetic_Iolite.csv` | A laser log made by the tool, giving each spot's ablation start/end, detected from that run's own blank. **Not a real laser log**: its times refer to the combined file, so always use the two together. | Import Iolite |
-| `PROJECT_YYYY-MM-DD_PARAM.xlsx` | Peak names, total-sum factors for our isotopes, and an empty internal standard sheet (filled in Ilaps, section 7.5). | Import Parameters |
-| `PROJECT_YYYY-MM-DD_run_order.txt` | Table of peak number, name, source file and ablation window. | Your reference for QC |
-| `PROJECT_make_iolite_log.txt` | The report (section 4.4), saved when the tool is run with its windows (menu, no arguments, or **Import single-spot runs...** in Ilaps). | Your record |
+| `PROJECT_YYYY-MM-DD_PARAM.xlsx` | Peak names, total-sum factors for the common isotopes, and an empty internal standard sheet (filled in Ilaps, section 7.5). | Import Parameters |
+| `PROJECT_YYYY-MM-DD_run_order.txt` | Table of peak number, name, source file and ablation window. | Reference for quality control |
+| `PROJECT_make_iolite_log.txt` | The report (section 4.4), saved when the tool is run with its windows (menu, no arguments, or **Import single-spot runs...** in Ilaps). | Record of the run |
 
 ### 4.3 Internal standard
 
@@ -104,14 +104,14 @@ The Param file is ready for total-sum correction. For internal standard correcti
 
 The report lists every run with its ablation start and length, and the **Iolite Start time** to enter in Ilaps (normally `0.60`). Some runs are marked `<-- check`:
 
-- **"2 signal regions, kept the longest"**: there was a separate short signal (a spike or stray particle) besides the ablation. Open the run and confirm the kept window is the ablation (in Oct 2026, a 1 s spike 20 s after the ablation in a VG-A3 run).
+- **"2 signal regions, kept the longest"**: a separate short signal (a spike or stray particle) occurred besides the ablation. Open the run and confirm that the retained window is the ablation (in Oct 2026, a 1 s spike 20 s after the ablation in a VG-A3 run).
 - **"unusual ablation length"**: the spot was ablated noticeably longer or shorter than the rest. Normal if intended (e.g. a longer acquisition); otherwise check the run.
 
-Skipped files are listed at the top with the reason. A run is skipped if it has no Agilent header, no signal above its blank, or an acquisition date the tool cannot read (it reads `Oct 28 2026 2:07 PM` and `10/28/2026 2:07:00 PM`; day-first dates such as `28/10/2026` are refused rather than guessed). All runs must have the same isotope list; split different methods into separate selections.
+Skipped files are listed at the top with the reason. A run is skipped if it has no Agilent header, no signal above its blank, or an acquisition date the tool cannot read (it reads `Oct 28 2026 2:07 PM` and `10/28/2026 2:07:00 PM`; day-first dates such as `28/10/2026` are rejected rather than interpreted). All runs must have the same isotope list; split different methods into separate selections.
 
 Then continue with section 6, using **Iolite** selection with the Start time from the report.
 
-> Why not threshold selection? Ilaps' Threshold method computes one cut-off from the first blank of the file. On a full day this splits spots into fragments (we saw 36 "peaks" from 5 spots). The synthetic Iolite log avoids that.
+> Threshold selection is not used: Ilaps' Threshold method computes one cut-off from the first blank of the file, which splits spots into fragments over a full day (36 "peaks" from 5 spots in testing). The synthetic Iolite log avoids this.
 
 ---
 
@@ -124,13 +124,13 @@ Then continue with section 6, using **Iolite** selection with the Start time fro
 
 ### 5.2 Param file (optional)
 
-Not needed: import without one and tick **Set names from iolite** (section 6.2). Ilaps then uses its built-in total-sum factors (all common isotopes, including Ca43), and the internal standard is loaded in Ilaps (section 7.5).
+Not required: import without one and tick **Set names from iolite** (section 6.2). Ilaps then uses its built-in total-sum factors (all common isotopes, including Ca43), and the internal standard is loaded in Ilaps (section 7.5).
 
 ### 5.3 Start time
 
 On the Iolite tab in Ilaps, **Start time** tells Ilaps where the Iolite log starts on the ICP-MS time axis. Set it to the time (s) of the **first reading where the first spot's signal rises** above the blank:
 
-1. Import the data (section 6.1) and look at the plot on the *Data analysis* screen. Zoom (magnifier icon) onto the first peak.
+1. Import the data (section 6.1) and inspect the plot on the *Data analysis* screen. Zoom (magnifier icon) onto the first peak.
 2. Read the time of the first point clearly above background. Enter that value.
 3. After **Select**, check that the start and end lines sit on the edges of the peaks across the **whole** run, including the last spots. If every window is shifted, adjust Start time by one reading and select again.
 
@@ -142,7 +142,7 @@ Example (`test_data/sample_data_Agilent.csv`): first rise at 126.16 s gives wind
 
 The toolbar at the top switches screens: **Home** (import), **Data analysis** (Ctrl+D), **Bulk analysis** (Ctrl+A), **Show data**, **Show error log** (Ctrl+E).
 
-> When a step fails, the lab version of Ilaps shows the problem in a pop-up (the full details stay under **Show error log** and in `log.txt` in the Ilaps folder). A message about a missing value or `NoneType` usually means a step was skipped: import, then Average, then Quantification, before the corrections. If a button seems to do nothing and no pop-up appears, check **Show error log**.
+> When a step fails, the laboratory version of Ilaps reports the problem in a pop-up (the full details stay under **Show error log** and in `log.txt` in the Ilaps folder). A message about a missing value or `NoneType` usually means a step was skipped: import, then Average, then Quantification, before the corrections. If a button seems to do nothing and no pop-up appears, check **Show error log**.
 
 ### 6.1 Import (Home screen)
 
@@ -151,33 +151,33 @@ The toolbar at the top switches screens: **Home** (import), **Data analysis** (C
 | Import Analysis | `..._combined.csv` | the Agilent `.csv` |
 | File type | `csv` | `csv` |
 | Instrument type | `Agilent` | `Agilent` |
-| Import Parameters | `..._PARAM.xlsx` | your `RUN_PARAM.xlsx` |
+| Import Parameters | `..._PARAM.xlsx` | `RUN_PARAM.xlsx`, if one exists |
 | Import Iolite | `..._synthetic_Iolite.csv` | the laser's `.Iolite.csv` |
 
-Click **Import**. Ilaps switches to *Data analysis* and plots the signal. Use the Param file made by Make Iolite log (4.2), or none (5.2). A Param file missing any of its three sheets (`names`, `internal standard`, `total sum`) crashes the import.
+Click **Import**. Ilaps switches to *Data analysis* and plots the signal. Use the Param file made by Make Iolite log (4.2), or none (5.2). A Param file missing any of its three sheets (`names`, `internal standard`, `total sum`) causes the import to fail.
 
 ### 6.2 Peak selection (Data analysis screen)
 
 1. Choose the **Iolite** tab.
 2. **Start time:** Case A: the value in the tool's report (`0.60`). Case B: see 5.3.
 3. **Set names from iolite:** leave unchecked when a Param file was imported (names then come from it); tick it when there is no Param file (Case B, 5.2). For Case A both give the same names.
-4. Leave **Skip background** and **Skip peak** empty. A non-zero *Skip peak* halved our averages in testing: the peak edges get treated as background.
+4. Leave **Skip background** and **Skip peak** empty. A non-zero *Skip peak* halved the averages in testing, because the peak edges are treated as background.
 5. Click **Select**. Check the plot: one start/end pair per spot, on the edges of each peak. Tick **log axes** to see the blanks.
 
 ### 6.3 Averaging and calibration (Bulk analysis screen)
 
-Set the **Settings** box exactly like this:
+Settings:
 
 | Setting | Use | Why |
 |---|---|---|
 | Detection limit | **`all`** | This box also sets how background is subtracted. `all` uses each spot's own neighbouring blank. The default `beginning` subtracts the first blank of the file from every spot. |
-| Despiking | `True` | Removes single-reading spikes. (Choosing `False` currently has no effect: Ilaps despikes either way.) |
+| Despiking | `True` | Removes single-reading spikes. |
 | Method | **`intensity`** | Mean count rate. `integral` sums over time, so spots ablated longer read higher. |
 | Peak ablation time | leave blank | Only used with `integral`. |
-| Standard | your calibrant, e.g. `BCR-2` | Must be one of the peak names and a row in `SRM.xlsx`. |
-| Drift Correction | **unchecked**, unless the calibrant was run at the start, middle and end | Ilaps fits a line through the calibrant spots by position and extends it to every spot. With only back-to-back calibrant spots, this extrapolates over the whole day; in our test, late samples came out 30–50% low and 111 values went negative. |
+| Standard | the calibrant, e.g. `BCR-2` | Must be one of the peak names and a row in `SRM.xlsx`. |
+| Drift Correction | **unchecked**, unless the calibrant was run at the start, middle and end | Ilaps fits a line through the calibrant spots by position and extends it to every spot. With only back-to-back calibrant spots, this extrapolates over the whole day; in testing, late samples were 30–50% low and 111 values were negative. |
 
-Then click, in order:
+Then run, in order:
 
 1. **Average**: background-corrected mean counts per spot (*Average* tab).
 2. **Quantification**: concentrations calibrated on the standard (*Quantified* tab). Calibrant spots are removed from this table. These values are **not yet corrected** for differences in ablation yield between materials, so they are typically biased by 10–30%. Always apply a correction (section 7).
@@ -187,11 +187,11 @@ Then click, in order:
 - **With XRF or EPMA data (preferred):** click **Internal Std Correction** (section 7).
 - **Without:** click **TS settings**, check the settings (section 7.6), then **Total Sum Correction**.
 
-You can run both and export both for comparison.
+Both corrections can be run and exported for comparison.
 
 ### 6.5 Export
 
-Do these in this order. **Report** changes the tables in place, so run *Export stats* before it.
+Run these steps in order. **Report** changes the tables in place, so *Export stats* must come before it.
 
 1. **Export**: one Excel workbook with sheets:
    - `raw`: the counts
@@ -205,7 +205,7 @@ Do these in this order. **Report** changes the tables in place, so run *Export s
    - `Outliers`: all spots; for samples with 3 or more spots, outlier spots are in red.
    - `Stats`: per sample: `mean`, `2*std`, `max`, `min`, `median`.
 
-   The internal-standard option writes one file per IS isotope, named `yourfile_Si28.xlsx` etc.
+   The internal-standard option writes one file per IS isotope, named `<file>_Si28.xlsx` etc.
 3. **Report**: values below the detection limit become `< LoD`, the rest are rounded, and a detection-limit row is added to each table.
 4. **Export** again to a new file name. This is the version for tables and reports.
 
@@ -217,7 +217,7 @@ Do these in this order. **Report** changes the tables in place, so run *Export s
 
 ### 7.1 What it does
 
-Spots ablate different amounts of material, and samples ablate differently from the calibrant. An internal standard is an element whose concentration in each sample you already know (from EPMA or XRF). Ilaps scales every element in a spot so that the internal standard element matches its known value:
+Spots ablate different amounts of material, and samples ablate differently from the calibrant. An internal standard is an element whose concentration in each sample is known independently (from EPMA or XRF). Ilaps scales every element in a spot so that the internal standard element matches its known value:
 
 `corrected = quantified × (known IS concentration ÷ quantified IS concentration)`
 
@@ -225,7 +225,7 @@ Spots ablate different amounts of material, and samples ablate differently from 
 
 - An element **measured by EPMA on the same phase or glass** that the laser spot sampled, ideally at the same spot location.
 - High concentration, homogeneous, and with a precise EPMA value: usually **Si** (SiO2) or **Ca** (CaO); Al or Mg can also work.
-- **Measured by ICP-MS** in your method (we measure Si28 and Ca43) and **present in `SRM.xlsx` for your calibrant**. Ilaps refuses a calibrant without a value for the IS element.
+- **Measured by ICP-MS** in the method (the current method measures Si28 and Ca43) and **present in `SRM.xlsx` for the calibrant**. Ilaps refuses a calibrant without a value for the IS element.
 - Using two (e.g. Si28 and Ca43) gives two independent results; agreement between them is a useful check.
 
 ### 7.3 Prepare the EPMA or XRF table
@@ -233,7 +233,7 @@ Spots ablate different amounts of material, and samples ablate differently from 
 One `.csv` or `.xlsx` file (the same layout works for EPMA and XRF results):
 
 - **First column:** sample name, spelled exactly like the peak names (`VG-A1`).
-- **Other columns:** oxides in **wt%**, with these headers: `SiO2`, `CaO`, `Al2O3`, `MgO`, `TiO2`, `FeO`, `Fe2O3`, `Na2O`, `K2O`, `MnO`, `P2O5`, `Cr2O3`. Common variants are understood too: `Fe2O3T`, `Fe2O3(T)`, `FeO*`, `SiO2 (wt%)`. Other columns (e.g. `LOI`, `Total`) are ignored.
+- **Other columns:** oxides in **wt%**, with these headers: `SiO2`, `CaO`, `Al2O3`, `MgO`, `TiO2`, `FeO`, `Fe2O3`, `Na2O`, `K2O`, `MnO`, `P2O5`, `Cr2O3`. Common variants are also recognised: `Fe2O3T`, `Fe2O3(T)`, `FeO*`, `SiO2 (wt%)`. Other columns (e.g. `LOI`, `Total`) are ignored.
 - Several rows with the same name (repeat EPMA points or XRF replicates) are **averaged**.
 - Reference materials do not need EPMA rows: their values come from `SRM.xlsx`.
 
@@ -295,7 +295,7 @@ Assumes the major-element oxides of each spot add up to 100%. Good for anhydrous
 In **TS settings**:
 
 - **Total sum [ppm]:** `1000000` for 100%. If samples contain volatiles not measured (H2O, CO2), enter 100% minus their amount (e.g. `980000` for 2 wt% LOI).
-- **Isotope checkboxes:** a ticked isotope is **left out** of the sum. If you measured several isotopes of one major element (e.g. Si28 and Si29), tick all but one, or that element is counted twice.
+- **Isotope checkboxes:** a ticked isotope is **left out** of the sum. If several isotopes of one major element were measured (e.g. Si28 and Si29), tick all but one; otherwise that element is counted twice.
 - **keep oxide form:** reports oxide values instead of element ppm.
 
 Iron is counted as Fe2O3, manganese as MnO.
@@ -309,15 +309,15 @@ Iron is counted as Fe2O3, manganese as MnO.
 
 ## 8. Fused glass beads (lithium borate flux)
 
-Our XRF beads are samples (and standards) fused with lithium borate flux and a lithium bromide release agent, then polished. A spot on a bead samples **mostly flux**: the rock is diluted, typically 5–10× depending on the sample-to-flux ratio. This section covers what that changes. Everything in sections 4–7 still applies.
+The laboratory's XRF beads are samples (and standards) fused with lithium borate flux and a lithium bromide release agent, then polished. A spot on a bead samples **mostly flux**: the rock is diluted, typically 5–10× depending on the sample-to-flux ratio. This section describes the consequences. Sections 4–7 still apply.
 
 ### 8.1 What changes on a bead
 
 | Effect | Consequence |
 |---|---|
-| Flux is lithium borate | **Li comes from the flux**, not the rock: its signal is about the same in every bead (seen in Oct 2026: 330,000–1,035,000 cps in all materials, whatever their reference Li). **Never report Li.** B is also flux-derived (not in our method). |
+| Flux is lithium borate | **Li comes from the flux**, not the rock: its signal is about the same in every bead (seen in Oct 2026: 330,000–1,035,000 cps in all materials, whatever their reference Li). **Never report Li.** B is also flux-derived (not in the current method). |
 | Lithium bromide release agent | Br is mostly lost during fusion; not reportable. |
-| Rock diluted 5–10× by flux | Count rates are 5–10× lower than on the rock. In Oct 2026 many trace elements gave under 10 cps (most heavy REE, Hf, Ta, W, U, Rb, Cs). Expect poor precision and high detection limits for low-level trace elements. |
+| Rock diluted 5–10× by flux | Count rates are 5–10× lower than on the rock. In Oct 2026 many trace elements gave under 10 cps (most heavy REE, Hf, Ta, W, U, Rb, Cs). Precision is poor and detection limits are high for low-level trace elements. |
 | Fusion at about 1000–1100 °C | Volatile elements can be partly lost: As, Cu, Zn, Sn, Cs, Pb, S, halogens. They may read low against powder reference values. |
 | Flux impurities | Trace amounts of Na and other elements in the flux add to every bead. Matters most for elements that are low in the rock (Oct 2026: Na in SBC-1, only 0.15% Na2O, read 1.5× high). |
 | Volatiles (H2O, CO2, organic C) driven off | The bead holds the rock's **volatile-free** (ignited) composition. Reference values in `SRM.xlsx` are for the **as-received** powder. See 8.5. |
@@ -326,7 +326,7 @@ Our XRF beads are samples (and standards) fused with lithium borate flux and a l
 ### 8.2 Elements to report
 
 - **Do not report:** Li, B, Br.
-- **Treat with caution:** volatile elements (As, Cu, Zn, Sn, Cs, Pb); any element with fewer than about 20 cps above background in your samples (check the `average` sheet of the export); Ca43 in Al-rich, Ca-poor samples (²⁷Al¹⁶O⁺ overlaps mass 43; in Oct 2026 Ca read 1.40× in SDC-1 and 1.17× in SBC-1). Measure Ca44 in future methods.
+- **Treat with caution:** volatile elements (As, Cu, Zn, Sn, Cs, Pb); any element with fewer than about 20 cps above background in the samples (check the `average` sheet of the export); Ca43 in Al-rich, Ca-poor samples (²⁷Al¹⁶O⁺ overlaps mass 43; in Oct 2026 Ca read 1.40× in SDC-1 and 1.17× in SBC-1). Measure Ca44 in future methods.
 - **Reliable** (Oct 2026, BCR-2 calibrant, Si internal standard, recovery of SDC-1, SBC-1 and AGV-2a):
   - within 5% in all three: Mg, Al, Si, K, Ti, Mn, Sr, Ba, Rb (Rb gave under 10 cps in the VG samples, so it is reliable in standards only);
   - within 10% in all three: Fe, Co, V, Ce, Zr, Th, U, Yb;
@@ -339,9 +339,9 @@ The flux dilution cancels in the internal standard correction, as long as the in
 
 | Internal standard values from | Results come out as | Notes |
 |---|---|---|
-| **XRF of the same bead (recommended)** | Rock concentrations, on the same basis as the XRF report | Load the XRF table directly (7.5). Check whether your XRF report is volatile-free (ignited) or as-received, and state that basis with the results. |
+| **XRF of the same bead (recommended)** | Rock concentrations, on the same basis as the XRF report | Load the XRF table directly (7.5). Establish whether the XRF results are volatile-free (ignited) or as-received, and state that basis with the results. |
 | **EPMA on the bead glass** | Concentrations **in the bead** (diluted) | Convert the EPMA values to rock values **before** making the table (8.4), so every result is a rock value. |
-| **Total sum** (no XRF/EPMA) | Rock concentrations, **volatile-free** basis | All majors must be measured (we measure Si, Ti, Al, Fe, Mn, Mg, Ca, Na, K, P). In **TS settings**, tick **Li7** so flux Li is left out of the sum. |
+| **Total sum** (no XRF/EPMA) | Rock concentrations, **volatile-free** basis | All major elements must be measured (the current method measures Si, Ti, Al, Fe, Mn, Mg, Ca, Na, K, P). In **TS settings**, tick **Li7** so flux Li is left out of the sum. |
 
 Use **Si28** as the internal standard on beads. Ca43 is affected by AlO⁺ in Al-rich samples (8.2).
 
@@ -370,7 +370,7 @@ Oct 2026 example: SBC-1 (a shale) has major oxides summing to about 89%. Its tot
 ### 8.6 Session design for beads
 
 - **Fuse standards and samples the same way:** same flux, ratio and fusion program.
-- **Run a flux blank bead** (flux and release agent only, fused like the samples) at least once per session, and name it e.g. `FLUX-BLANK`. Compare its counts with the samples' in the `average` sheet. Treat any element where the flux blank reaches more than about 10% of a sample's counts as unreliable for that sample. The flux blank has no Si, so it cannot be IS- or total-sum-corrected; it is only for this comparison. (The tool needs an internal standard value for every peak, so add a `FLUX-BLANK` row with SiO2 `0.001` to the table; ignore its corrected results.)
+- **Run a flux blank bead** (flux and release agent only, fused like the samples) at least once per session, and name it e.g. `FLUX-BLANK`. Compare its counts with the samples' in the `average` sheet. Treat any element where the flux blank reaches more than about 10% of a sample's counts as unreliable for that sample. The flux blank has no Si, so it cannot be IS- or total-sum-corrected; it is only for this comparison. (Ilaps requires an internal standard value for every peak, so add a `FLUX-BLANK` row with SiO2 `0.001` to the table and disregard its corrected results.)
 - **Clean the surface:** run a few pre-ablation (cleaning) pulses over each spot to remove polishing residue, and avoid bubbles, cracks, unmelted grains and the bead edge.
 - **Standards:** spread calibrant spots through the session (start, middle, end); include a basaltic check standard (BHVO-2 is in `SRM.xlsx`) and one more secondary standard.
 
@@ -382,7 +382,7 @@ For each session, before using sample results:
 
 1. **Peak count:** number of peaks on the plot = number of names. If they differ, *Average* fails with a pop-up (details under *Show error log*).
 2. **Windows:** start/end lines sit on every peak (spot-check the first, a middle and the last spots).
-3. **Secondary standards:** compare the mean of each secondary standard to `SRM.xlsx`. Suggested lab criteria (adjust as the lab decides): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
+3. **Secondary standards:** compare the mean of each secondary standard to `SRM.xlsx`. Suggested acceptance criteria (to be set by the laboratory): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
    Reference result (Oct 28 2026, BCR-2 calibrant, Si28 internal standard): AGV-2a median recovery 1.01; Si 1.00, Ca 1.03, Fe 1.00, Sr 1.03, La 1.01.
 4. **Repeats:** use the `2*std` rows in the *Export stats* `Stats` sheet; investigate spots shown in red in `Outliers`.
 5. **Keep for the record:** the raw runs, the combined/Param/Iolite files, the EPMA table, both exports, and a note of the settings used (calibrant, IS isotope, TS settings).
@@ -393,20 +393,20 @@ For each session, before using sample results:
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| **Select** does nothing | Empty Start time (Iolite) or empty boxes (Threshold) | Fill them in; see 6.2 |
-| Import does nothing / app shows no data | Param file missing a sheet, or wrong Instrument type | Use the tool-made Param file; Instrument `Agilent` |
+| **Select** does nothing | Empty Start time (Iolite) or empty boxes (Threshold) | Enter the values; see 6.2 |
+| Import does nothing or no data are shown | Param file missing a sheet, or wrong Instrument type | Use the Param file made by Make Iolite log; Instrument `Agilent` |
 | Make Iolite log writes nothing | A window was cancelled, or every file was skipped | Check the terminal or report for the reason (4.4) |
 | *Average* does nothing; error log shows "Length mismatch" | Selection found more or fewer peaks than there are names | Case A: use Iolite selection with the synthetic log. Case B: check Start time and the Iolite log covers the same run |
 | "X not in peak names" | Standard dropdown name does not match any peak | Make names match `SRM.xlsx` exactly (case, hyphens) |
 | Internal Std Correction says the internal standard is missing | No values loaded | Load internal standard (7.5) |
 | Internal Std Correction shows "Internal standard sheet does not match the peaks" | A sample has no row, a value is blank, or per-spot rows are out of run order | Follow the message; load the internal standard again (7.5) |
 | IS-corrected IS element ≠ EPMA value | Wrong value in the table or sheet (or rows misaligned, with the original Ilaps) | Check the table; load again (7.5) |
-| Report / Export stats do nothing | Original imgMS with pandas 2.x | Install the lab imgMS (section 2), or `ilaps/bin/pip install "pandas<2"` |
+| Report / Export stats do nothing | Original imgMS with pandas 2.x | Install the laboratory imgMS (section 2), or `ilaps/bin/pip install "pandas<2"` |
 | Export stats fails after Report | Report replaced numbers with `< LoD` text | Re-import, process again, run Export stats before Report |
 | Element shows `< LoD` everywhere | Calibrant has no value for that element in `SRM.xlsx` | Add the value, or calibrate on a standard that has it |
 | Values negative or drifting through the day | Drift Correction checked with poor calibrant spacing | Uncheck it (6.3) |
 | Results ~10–30% off for all elements | No correction applied | Apply IS or total sum correction |
-| Li about the same in every sample and standard | Fused beads: Li is from the flux | Don't report Li (8.1) |
+| Li about the same in every sample and standard | Fused beads: Li is from the flux | Do not report Li (8.1) |
 | Volatile-rich standard (e.g. SBC-1) ~10% high after total sum | Total sum gives volatile-free values; `SRM.xlsx` is as-received | Compare on the same basis (8.5) |
 | Load internal standard: "no SiO2 in the table" for a sample | Name in the table differs from the peak name, or header not recognised | Match spelling exactly; use oxide headers as in 7.3 |
 
@@ -420,7 +420,7 @@ python GUI.py
 ```
 
 - Home: **Import single-spot runs...**, select all runs in `Victor Samples`, name `Victor`, choose the 2026-10-28 day (or import the existing `Victor_2026-10-28_*` files).
-- Data analysis: Iolite tab, Start time `0.60`, Select. Expect 54 peaks.
+- Data analysis: Iolite tab, Start time `0.60`, Select. Result: 54 peaks.
 - Bulk analysis: Detection limit `all`, Despiking `True`, Method `intensity`, Standard `BCR-2`, Drift Correction off. Then Average, Quantification, **Load internal standard...** with the XRF table (Si28 from SiO2), Internal Std Correction (or TS settings, then Total Sum Correction).
 - These are fused beads: never report Li; for total sum, tick Li7 in TS settings (section 8).
 - Export, then Export stats, then Report, then Export to a second file.

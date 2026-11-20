@@ -350,7 +350,7 @@ class BulkAnalysis(QWidget):
     def export(self):
         # get filename
         filename, filters = QFileDialog.getSaveFileName(
-            self, 'Save file', '', 'All files (*.*);;Excel (*.xlsx, *.xls)')
+            self, 'Save file', '', 'Excel (*.xlsx);;All files (*)')
 
         # save data
         if filename:
@@ -360,6 +360,7 @@ class BulkAnalysis(QWidget):
         # export data into excel in a formated style, containing means, sd, max and min for repeated samples
 
         # get data table to export
+        self.stat_export_table = None
         window_to_open = DataTableWindow(self)
         window_to_open.setAttribute(Qt.WA_DeleteOnClose)
         window_to_open.show()
@@ -367,12 +368,16 @@ class BulkAnalysis(QWidget):
         loop = QEventLoop()
         window_to_open.destroyed.connect(loop.quit)
         loop.exec_()
+        if not self.stat_export_table:  # table window closed without Apply
+            return
 
         # get filename
         filename, filters = QFileDialog.getSaveFileName(
-            self, 'Save file', '', 'All files (*.*);;Excel (*.xlsx, *.xls)')
+            self, 'Save file', '', 'Excel (*.xlsx);;All files (*)')
+        if not filename:  # save dialog cancelled
+            return
 
-        # export data
+        # export data (imgMS adds .xlsx when the name has no or another extension)
         self.parent.Data.formated_export(
             filename, table=self.stat_export_table)
 

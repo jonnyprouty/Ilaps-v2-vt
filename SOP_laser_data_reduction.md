@@ -144,7 +144,7 @@ Example (`test_data/sample_data_Agilent.csv`): first rise at 126.16 s gives wind
 
 The toolbar at the top switches screens: **Home** (import), **Data analysis** (Ctrl+D), **Bulk analysis** (Ctrl+A), **Show data**, **Show error log** (Ctrl+E).
 
-> If a button seems to do nothing, open **Show error log**: Ilaps reports most errors there and not in a pop-up.
+> When a step fails, the lab version of Ilaps shows the problem in a pop-up (the full details stay under **Show error log** and in `log.txt` in the Ilaps folder). A message about a missing value or `NoneType` usually means a step was skipped: import, then Average, then Quantification, before the corrections. If a button seems to do nothing and no pop-up appears, check **Show error log**.
 
 ### 6.1 Import (Home screen)
 
@@ -388,7 +388,7 @@ Oct 2026 example: SBC-1 (a shale) has major oxides summing to about 89%. Its tot
 
 For each session, before using sample results:
 
-1. **Peak count:** number of peaks on the plot = number of names. If they differ, *Average* fails and the error appears under *Show error log*.
+1. **Peak count:** number of peaks on the plot = number of names. If they differ, *Average* fails with a pop-up (details under *Show error log*).
 2. **Windows:** start/end lines sit on every peak (spot-check the first, a middle and the last spots).
 3. **Secondary standards:** compare the mean of each secondary standard to `SRM.xlsx`. Suggested lab criteria (adjust as the lab decides): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
    Reference result (Oct 28 2026, BCR-2 calibrant, Si28 internal standard): AGV-2a median recovery 1.01; Si 1.00, Ca 1.03, Fe 1.00, Sr 1.03, La 1.01.

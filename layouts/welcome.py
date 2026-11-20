@@ -4,6 +4,7 @@ from PySide2 import QtGui
 from PySide2.QtCore import Qt
 
 from widgets.pandas_model import PandasModel
+import error_popup
 
 from xlrd import XLRDError
 
@@ -117,6 +118,7 @@ class Welcome(QWidget):
 
         # create logger
         self.parent.logger = get_logger('./log.txt')
+        error_popup.attach(self.parent.logger)
         self.parent.logger.info('Starting new session.')
 
         # create reader

@@ -190,7 +190,7 @@ li { margin:3px 0; }
 <h2 id="6-processing-in-ilaps-both-cases">6. Processing in Ilaps (both cases)</h2>
 <p>The toolbar at the top switches screens: <strong>Home</strong> (import), <strong>Data analysis</strong> (Ctrl+D), <strong>Bulk analysis</strong> (Ctrl+A), <strong>Show data</strong>, <strong>Show error log</strong> (Ctrl+E).</p>
 <blockquote>
-<p>If a button seems to do nothing, open <strong>Show error log</strong>: Ilaps reports most errors there and not in a pop-up.</p>
+<p>When a step fails, the lab version of Ilaps shows the problem in a pop-up (the full details stay under <strong>Show error log</strong> and in <code>log.txt</code> in the Ilaps folder). A message about a missing value or <code>NoneType</code> usually means a step was skipped: import, then Average, then Quantification, before the corrections. If a button seems to do nothing and no pop-up appears, check <strong>Show error log</strong>.</p>
 </blockquote>
 <h3 id="61-import-home-screen">6.1 Import (Home screen)</h3>
 <div class="tbl"><table>
@@ -593,7 +593,7 @@ li { margin:3px 0; }
 <h2 id="9-quality-control">9. Quality control</h2>
 <p>For each session, before using sample results:</p>
 <ol>
-<li><strong>Peak count:</strong> number of peaks on the plot = number of names. If they differ, <em>Average</em> fails and the error appears under <em>Show error log</em>.</li>
+<li><strong>Peak count:</strong> number of peaks on the plot = number of names. If they differ, <em>Average</em> fails with a pop-up (details under <em>Show error log</em>).</li>
 <li><strong>Windows:</strong> start/end lines sit on every peak (spot-check the first, a middle and the last spots).</li>
 <li><strong>Secondary standards:</strong> compare the mean of each secondary standard to <code>SRM.xlsx</code>. Suggested lab criteria (adjust as the lab decides): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
    Reference result (Oct 28 2026, BCR-2 calibrant, Si28 internal standard): AGV-2a median recovery 1.01; Si 1.00, Ca 1.03, Fe 1.00, Sr 1.03, La 1.01.</li>

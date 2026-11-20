@@ -11,6 +11,7 @@ from layouts.imaging import Imaging
 from layouts.show_data import ShowData
 from layouts.error_log import ErrorLog
 from style import IlapsStyle
+import error_popup
 
 
 class MainWindow(QMainWindow):
@@ -110,6 +111,7 @@ class MainWindow(QMainWindow):
 app = QApplication(sys.argv)
 
 window = MainWindow()
+error_popup.install(window)
 window.show()
 
 app.exec_()

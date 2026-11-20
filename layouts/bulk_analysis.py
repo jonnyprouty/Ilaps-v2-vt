@@ -5,6 +5,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtCore import QEventLoop
 from widgets.tab_table import TabTable
 from widgets.pandas_model import PandasModel
+import error_popup
 from widgets.drop_elems_window import ElemWindow
 from widgets.stat_export_select import DataTableWindow
 
@@ -213,9 +214,7 @@ class BulkAnalysis(QWidget):
         try:
             self.parent.Data.IS_correction()
         except ValueError as e:
-            error_dialog = QErrorMessage()
-            error_dialog.showMessage(str(e))
-            error_dialog.exec_()
+            error_popup.notify(e)
             return
 
         # show data corrected by internal standard

@@ -1,3 +1,4 @@
+import os
 import sys
 from PySide2.QtWidgets import *
 from PySide2 import QtGui
@@ -11,6 +12,10 @@ from xlrd import XLRDError
 from imgMS import MSData as msd
 from imgMS import MSEval as mse
 from imgMS.side_functions import *
+
+# Make Iolite log (tools/make_iolite.py): combines single-spot runs, writes Iolite log and Param file
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools'))
+import make_iolite  # noqa: E402
 
 
 class Welcome(QWidget):
@@ -90,6 +95,13 @@ class Welcome(QWidget):
         self.mainLayout.addWidget(self.importBtn)
         self.importBtn.clicked.connect(self.import_data)
 
+        self.singleSpotBtn = QPushButton('Import single-spot runs...')
+        self.singleSpotBtn.setToolTip(
+            'Select Agilent runs with one spot each: they are joined into one file per day, with an '
+            'Iolite log and Param file (Make Iolite log), and the day is imported.')
+        self.mainLayout.addWidget(self.singleSpotBtn)
+        self.singleSpotBtn.clicked.connect(self.import_single_spot)
+
     def get_page(self):
         """
         Returns Page for bulk analysis for main stack of gui
@@ -108,6 +120,60 @@ class Welcome(QWidget):
                                                         filter='All Files(*.*);; Excel Files(*.xlsx)')
         if filename:
             entry.setText(filename)
+
+    def import_single_spot(self):
+        """
+        Combine single-spot Agilent runs with Make Iolite log, fill in the import fields and import.
+        """
+        files, _ = QFileDialog.getOpenFileNames(
+            self, 'Select the single-spot runs (one Agilent export per spot)', '',
+            'Agilent exports (*.txt *.csv);;All files (*)')
+        if not files:
+            return
+        out_dir = os.path.dirname(files[0])
+        prefix, ok = QInputDialog.getText(self, 'Output name', 'Prefix for the output files:',
+                                          text=os.path.basename(out_dir).replace(' ', '_'))
+        prefix = prefix.strip()
+        if not ok or not prefix:
+            return
+
+        lines = []
+        try:
+            days = make_iolite.make(make_iolite.collect_files(files, '*'), out_dir, prefix, say=lines.append)
+        except ValueError as e:
+            error_popup.notify(e)
+            return
+        with open(os.path.join(out_dir, f'{prefix}_make_iolite_log.txt'), 'w') as fh:
+            fh.write('\n'.join(lines) + '\n')
+
+        day = days[0]
+        if len(days) > 1:
+            labels = [f"{d['tag']} ({len(d['runs'])} spots)" for d in days]
+            choice, ok = QInputDialog.getItem(self, 'Which day?', 'The runs are from several days; '
+                                              'each has its own files. Import:', labels, 0, False)
+            if not ok:
+                return
+            day = days[labels.index(choice)]
+
+        self.dataEntry1.setText(day['combined'])
+        self.dataEntry2.setText(day['param'])
+        self.dataEntry3.setText(day['iolite'])
+        self.fileType.setCurrentText('csv')
+        self.instrument.setCurrentText('Agilent')
+        select = self.parent.data_select.select
+        select.tabs.setCurrentIndex(1)  # Iolite selection
+        select.start.setText(f"{day['start_time']:.2f}")
+
+        checks = sum('<-- check' in l for l in lines)
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Information)
+        box.setWindowTitle('Single-spot runs combined')
+        box.setText(f"{len(day['runs'])} spots from {day['tag']} combined; files written to {out_dir}.\n"
+                    f"Iolite Start time set to {day['start_time']:.2f}."
+                    + (f"\n{checks} spot(s) marked to check: see the details." if checks else ''))
+        box.setDetailedText('\n'.join(lines))
+        box.exec_()
+        self.import_data()
 
     def import_data(self):
         """

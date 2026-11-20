@@ -99,8 +99,11 @@ li { margin:3px 0; }
 </ul>
 <hr />
 <h2 id="4-case-a-one-file-per-spot-build-combined-files">4. Case A: one file per spot → build combined files</h2>
-<p>Ilaps calibrates within one loaded file, so single-spot runs must first be joined into one file per day, with an Iolite log that tells Ilaps where each spot is and a Param file. The <strong>Make Iolite log</strong> tool (<code>tools/make_iolite.py</code>) makes all three. It needs only Python 3, not the Ilaps environment.</p>
-<h3 id="41-run-make-iolite-log">4.1 Run Make Iolite log</h3>
+<p>Ilaps calibrates within one loaded file, so single-spot runs must first be joined into one file per day, with an Iolite log that tells Ilaps where each spot is and a Param file. The <strong>Make Iolite log</strong> tool (<code>tools/make_iolite.py</code>) makes all three.</p>
+<h3 id="40-quickest-way-from-inside-ilaps">4.0 Quickest way: from inside Ilaps</h3>
+<p>On the <strong>Home</strong> screen, click <strong>Import single-spot runs...</strong>, select the runs (Ctrl+A selects a whole folder; non-run files are skipped) and enter an output name. Ilaps runs Make Iolite log, writes the files of section 4.2 next to the runs, asks which day to load if the runs span several days, fills in the import fields, sets the Iolite tab and Start time on <em>Data analysis</em>, shows the tool's report (section 4.4; open <em>Show Details</em>), and imports. Continue with <strong>Select</strong> (section 6.2). To load another day later, use the files it wrote with the normal import (section 6.1).</p>
+<h3 id="41-run-make-iolite-log-on-its-own">4.1 Run Make Iolite log on its own</h3>
+<p>Use this outside Ilaps, or on a computer without the Ilaps environment (it needs only Python 3).</p>
 <ol>
 <li>Start it: choose <strong>Make Iolite log</strong> in the application menu, or run
    <code>bash
@@ -147,7 +150,7 @@ li { margin:3px 0; }
 </tr>
 <tr>
 <td><code>PROJECT_make_iolite_log.txt</code></td>
-<td>The report (section 4.4), saved when the tool is run with its windows (menu or no arguments).</td>
+<td>The report (section 4.4), saved when the tool is run with its windows (menu, no arguments, or <strong>Import single-spot runs...</strong> in Ilaps).</td>
 <td>Your record</td>
 </tr>
 </tbody>

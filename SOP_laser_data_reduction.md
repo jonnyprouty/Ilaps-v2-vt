@@ -57,9 +57,15 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
 
 ## 4. Case A: one file per spot → build combined files
 
-Ilaps calibrates within one loaded file, so single-spot runs must first be joined into one file per day, with an Iolite log that tells Ilaps where each spot is and a Param file. The **Make Iolite log** tool (`tools/make_iolite.py`) makes all three. It needs only Python 3, not the Ilaps environment.
+Ilaps calibrates within one loaded file, so single-spot runs must first be joined into one file per day, with an Iolite log that tells Ilaps where each spot is and a Param file. The **Make Iolite log** tool (`tools/make_iolite.py`) makes all three.
 
-### 4.1 Run Make Iolite log
+### 4.0 Quickest way: from inside Ilaps
+
+On the **Home** screen, click **Import single-spot runs...**, select the runs (Ctrl+A selects a whole folder; non-run files are skipped) and enter an output name. Ilaps runs Make Iolite log, writes the files of section 4.2 next to the runs, asks which day to load if the runs span several days, fills in the import fields, sets the Iolite tab and Start time on *Data analysis*, shows the tool's report (section 4.4; open *Show Details*), and imports. Continue with **Select** (section 6.2). To load another day later, use the files it wrote with the normal import (section 6.1).
+
+### 4.1 Run Make Iolite log on its own
+
+Use this outside Ilaps, or on a computer without the Ilaps environment (it needs only Python 3).
 
 1. Start it: choose **Make Iolite log** in the application menu, or run
    ```bash
@@ -88,7 +94,7 @@ On another Linux computer: copy `tools/make_iolite.py`, and for the menu entry c
 | `PROJECT_YYYY-MM-DD_synthetic_Iolite.csv` | A laser log made by the tool, giving each spot's ablation start/end, detected from that run's own blank. **Not a real laser log**: its times refer to the combined file, so always use the two together. | Import Iolite |
 | `PROJECT_YYYY-MM-DD_PARAM.xlsx` | Peak names, total-sum factors for our isotopes (including Ca43, which Ilaps' defaults lack), and an empty internal standard sheet (filled in section 7.5). | Import Parameters |
 | `PROJECT_YYYY-MM-DD_run_order.txt` | Table of peak number, name, source file and ablation window. | Your reference for QC |
-| `PROJECT_make_iolite_log.txt` | The report (section 4.4), saved when the tool is run with its windows (menu or no arguments). | Your record |
+| `PROJECT_make_iolite_log.txt` | The report (section 4.4), saved when the tool is run with its windows (menu, no arguments, or **Import single-spot runs...** in Ilaps). | Your record |
 
 ### 4.3 Internal standard
 

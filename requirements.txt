@@ -1,12 +1,11 @@
 matplotlib
-numpy
+numpy<2
 pandas
 patsy
 Pillow
 PySide2
 scikit-learn
 scipy
-sklearn
 statsmodels
 xlrd
 XlsxWriter

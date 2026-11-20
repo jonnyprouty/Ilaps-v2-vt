@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Make Iolite log
+Comment=Combine single-spot Agilent runs and make a synthetic Iolite log for Ilaps
+Exec=/usr/bin/python3 /home/jprouty/Tools/Ilaps-v2/tools/make_iolite.py
+Terminal=false
+Categories=Science;

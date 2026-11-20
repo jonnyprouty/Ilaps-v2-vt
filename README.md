@@ -4,6 +4,24 @@
 # Ilaps-v2
 **python data reduction and imaging application for LA-ICP-MS**
 
+## About this fork
+
+This repository is a fork of [nikadilli/Ilaps-v2](https://github.com/nikadilli/Ilaps-v2), adapted to the specific needs and workflow of the **Virginia Tech Department of Geosciences LA-ICP-MS lab**. It uses the lab fork of imgMS, [jonnyprouty/imgMS-vt](https://github.com/jonnyprouty/imgMS-vt), which `requirements.txt` installs.
+
+The lab procedure is in [`SOP_laser_data_reduction.md`](SOP_laser_data_reduction.md) (also as `.html`).
+
+Changes from the original:
+
+- **Import single-spot runs** (Home screen): Agilent runs with one spot each are joined into one file per day, with a synthetic Iolite log and a Param file, and imported. The same step is available outside Ilaps as `tools/make_iolite.py` (Python 3 standard library only).
+- **Load internal standard** (Bulk analysis): internal standard values from an XRF or EPMA table (sample name and oxide wt%), converted to element µg/g, with reference materials taken from `SRM.xlsx`.
+- Errors are shown in a pop-up instead of only in the error log.
+- Fixes: the data table no longer rounds the time axis of the imported data (this shifted peak windows); Despiking `False` now takes effect; export file names without an extension are accepted.
+- Built-in total-sum factors cover all common isotopes (Ca43 was missing).
+- `SRM.xlsx` holds the lab's reference material values.
+- Tests: `ilaps/bin/python -m unittest discover tests` (from the Ilaps folder).
+
+The original README follows.
+
 ## About Ilaps
 LA-ICP-MS is an extremely powerful analytical technique for spatially resolved analysis of solid samples. It produces complex, time-dependent signals which require different approach than signals produced by solution sample introduction. 
 

@@ -274,8 +274,8 @@ def make(files, out_dir, prefix, blank_seconds=50.0, sd_multiply=10.0, strip=("U
             for l, t in zip(r["data"], times):
                 out.append(f"{t + offset:.3f}," + l.split(",", 1)[1])
             offset += times[-1] + dt
-        # Ilaps' Agilent reader drops the final data row along with the footer: add a sacrificial copy.
-        out.append(f"{offset:.3f}," + out[-1].split(",", 1)[1])
+        # No padding row: the lab imgMS reads every row. The original imgMS (0.2.12) drops the final row,
+        # which is blank after the last spot, so files still work there.
         tag = f"{prefix}_{day:%Y-%m-%d}"
         method = rr[0]["head3"][2].split("using", 1)[-1].strip() if len(rr[0]["head3"]) > 2 else ""
         head = [f"Combined from {len(rr)} single-spot runs by make_iolite.py",

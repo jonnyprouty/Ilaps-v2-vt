@@ -74,10 +74,10 @@ li { margin:3px 0; }
    cd ~/Tools/Ilaps-v2
    source ilaps/bin/activate
    python GUI.py</code></li>
-<li><strong>pandas must be older than 2.0.</strong> With pandas 2.x, the <strong>Report</strong> and <strong>Export stats</strong> buttons crash without showing an error (the message only appears under <em>Show error log</em>). Install once:
+<li><strong>Lab version of imgMS.</strong> Ilaps does its calculations with the <code>imgMS</code> package. We use the lab fork (<code>jonnyprouty/imgMS-vt</code>), which matches the internal standard sheet by name (7.5), keeps the last data row of Agilent files, and works with pandas 2. <code>ilaps/bin/pip install -r requirements.txt</code> installs it. To work on imgMS itself, clone it to <code>~/Tools/imgMS-vt</code> and install that copy instead (edits then take effect immediately):
    <code>bash
-   ilaps/bin/pip install "pandas&lt;2"</code>
-   Check: <code>ilaps/bin/python -c "import pandas; print(pandas.__version__)"</code> should print <code>1.5.x</code>.</li>
+   ilaps/bin/pip install --no-deps -e ~/Tools/imgMS-vt</code>
+   Check: <code>ilaps/bin/python -c "import imgMS; print(imgMS.__file__)"</code> should point into <code>imgMS-vt</code>. With the original imgMS (0.2.12), pandas must be older than 2.0 (<code>ilaps/bin/pip install "pandas&lt;2"</code>), or <strong>Report</strong> and <strong>Export stats</strong> crash without showing an error.</li>
 <li><strong>Reference materials (<code>SRM.xlsx</code>).</strong> Ilaps reads <code>SRM.xlsx</code> in the Ilaps folder (not the copy in <code>test_data/</code>). Before a new reference material can be used:</li>
 <li>Add one row per material. Column A is the name, spelled exactly as the peaks will be named (e.g. <code>BCR-2</code>, <code>AGV-2a</code>, <code>W-2b</code>).</li>
 <li>Element columns (<code>Si</code>, <code>Ca</code>, <code>Fe</code>, …) are in <strong>µg/g (ppm) of the element</strong>, not oxide wt%. Convert oxides with the factors in section 7.4.</li>
@@ -653,8 +653,8 @@ li { margin:3px 0; }
 </tr>
 <tr>
 <td>Report / Export stats do nothing</td>
-<td>pandas 2.x installed</td>
-<td><code>ilaps/bin/pip install "pandas&lt;2"</code></td>
+<td>Original imgMS with pandas 2.x</td>
+<td>Install the lab imgMS (section 2), or <code>ilaps/bin/pip install "pandas&lt;2"</code></td>
 </tr>
 <tr>
 <td>Export stats fails after Report</td>

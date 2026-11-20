@@ -27,11 +27,11 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
    source ilaps/bin/activate
    python GUI.py
    ```
-2. **pandas must be older than 2.0.** With pandas 2.x, the **Report** and **Export stats** buttons crash without showing an error (the message only appears under *Show error log*). Install once:
+2. **Lab version of imgMS.** Ilaps does its calculations with the `imgMS` package. We use the lab fork (`jonnyprouty/imgMS-vt`), which matches the internal standard sheet by name (7.5), keeps the last data row of Agilent files, and works with pandas 2. `ilaps/bin/pip install -r requirements.txt` installs it. To work on imgMS itself, clone it to `~/Tools/imgMS-vt` and install that copy instead (edits then take effect immediately):
    ```bash
-   ilaps/bin/pip install "pandas<2"
+   ilaps/bin/pip install --no-deps -e ~/Tools/imgMS-vt
    ```
-   Check: `ilaps/bin/python -c "import pandas; print(pandas.__version__)"` should print `1.5.x`.
+   Check: `ilaps/bin/python -c "import imgMS; print(imgMS.__file__)"` should point into `imgMS-vt`. With the original imgMS (0.2.12), pandas must be older than 2.0 (`ilaps/bin/pip install "pandas<2"`), or **Report** and **Export stats** crash without showing an error.
 3. **Reference materials (`SRM.xlsx`).** Ilaps reads `SRM.xlsx` in the Ilaps folder (not the copy in `test_data/`). Before a new reference material can be used:
    - Add one row per material. Column A is the name, spelled exactly as the peaks will be named (e.g. `BCR-2`, `AGV-2a`, `W-2b`).
    - Element columns (`Si`, `Ca`, `Fe`, …) are in **µg/g (ppm) of the element**, not oxide wt%. Convert oxides with the factors in section 7.4.
@@ -409,7 +409,7 @@ For each session, before using sample results:
 | Internal Std Correction does nothing | Internal standard sheet empty | Run the tool (7.5) and re-import |
 | Internal Std Correction shows "Internal standard sheet does not match the peaks" | A sample has no row, a value is blank, or per-spot rows are out of run order | Follow the message; regenerate with the tool (7.5) and re-import |
 | IS-corrected IS element ≠ EPMA value | Wrong value in the internal standard sheet (or rows misaligned, with the original Ilaps) | Regenerate with the tool (7.5) |
-| Report / Export stats do nothing | pandas 2.x installed | `ilaps/bin/pip install "pandas<2"` |
+| Report / Export stats do nothing | Original imgMS with pandas 2.x | Install the lab imgMS (section 2), or `ilaps/bin/pip install "pandas<2"` |
 | Export stats fails after Report | Report replaced numbers with `< LoD` text | Re-import, process again, run Export stats before Report |
 | Element shows `< LoD` everywhere | Calibrant has no value for that element in `SRM.xlsx` | Add the value, or calibrate on a standard that has it |
 | Values negative or drifting through the day | Drift Correction checked with poor calibrant spacing | Uncheck it (6.3) |

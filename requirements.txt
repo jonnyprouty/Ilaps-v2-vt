@@ -9,5 +9,5 @@ scipy
 statsmodels
 xlrd
 XlsxWriter
-imgMS
+imgMS @ git+https://github.com/jonnyprouty/imgMS-vt.git
 openpyxl

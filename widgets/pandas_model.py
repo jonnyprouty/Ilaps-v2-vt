@@ -8,10 +8,9 @@ class PandasModel(QtCore.QAbstractTableModel):
     """
     def __init__(self, data, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
+        # display only: never change the data's index (the time axis of the raw data is used for
+        # peak selection; converting it to int in place shifted every peak window)
         self._data = data
-
-        if isinstance(self._data.index[0], float):
-            self._data.index = self._data.index.astype(int)
 
     def rowCount(self, parent=None):
         return self._data.shape[0]
@@ -29,5 +28,6 @@ class PandasModel(QtCore.QAbstractTableModel):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return self._data.columns[i]
         if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return str(self._data.index[i])
+            v = self._data.index[i]
+            return f'{v:.3f}' if isinstance(v, float) else str(v)
         return None

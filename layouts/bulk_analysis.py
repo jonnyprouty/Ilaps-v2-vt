@@ -130,7 +130,7 @@ class BulkAnalysis(QWidget):
         # get values from GUI
         method = self.method.currentText()
         scale = self.lodCombo.currentText()
-        despiking = self.despikingCombo.currentText()
+        despiking = self.despikingCombo.currentText() == 'True'  # text 'False' would count as true
 
         # calculate average
         self.parent.Data.average_isotopes(

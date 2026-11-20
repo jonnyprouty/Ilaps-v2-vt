@@ -209,8 +209,14 @@ class BulkAnalysis(QWidget):
             error_dialog.exec_()
             return
 
-        # correct data
-        self.parent.Data.IS_correction()
+        # correct data; imgMS raises ValueError when the internal standard sheet does not match the peaks
+        try:
+            self.parent.Data.IS_correction()
+        except ValueError as e:
+            error_dialog = QErrorMessage()
+            error_dialog.showMessage(str(e))
+            error_dialog.exec_()
+            return
 
         # show data corrected by internal standard
         model = PandasModel(

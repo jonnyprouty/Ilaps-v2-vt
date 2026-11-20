@@ -284,16 +284,17 @@ ilaps/bin/python tools/ilaps_prep.py internal-std \
 - Rerunning replaces the internal standard sheet; names and total-sum sheets are kept.
 - Ilaps reads the Param file at import: after updating it, **import again** in Ilaps.
 
-**Why use the tool instead of typing the sheet by hand:** Ilaps applies internal standard values **by row position, not by name**. The sheet must have exactly one row per peak, in run order, with **every calibrant peak left out**. One missing or extra row shifts every later value onto the wrong spot, and Ilaps gives no warning. If you must edit by hand, keep that structure:
+**How Ilaps matches the sheet to the spots** (lab version of Ilaps, with our imgMS fork): the tool writes one row per peak in run order, with every calibrant peak left out, and Ilaps uses those rows in order. A sheet typed by hand can instead have **one row per sample name**, in any order; Ilaps then matches rows by name, and extra rows (such as the calibrant) are ignored:
 
 | | Si28 | Ca43 |
 |---|---|---|
 | SDC-1 | 307573.4 | 10005.7 |
-| SDC-1 | 307573.4 | 10005.7 |
-| … | | |
 | VG-B1 | 247741.5 | 65752.0 |
+| … | | |
 
 (header row = isotopes; values in element ppm; secondary standards use their `SRM.xlsx` values.)
+
+Different values for repeat spots of one sample (e.g. EPMA of each spot) only work in the one-row-per-peak, run-order form. If the sheet fits neither form (a sample missing, a blank value, rows out of order), **Internal Std Correction** stops with a message saying what does not match, rather than applying values to the wrong spots. The original Ilaps (upstream imgMS 0.2.12) uses rows by position only and gives no warning; with it, use the tool.
 
 ### 7.6 Total sum correction (when there is no EPMA or XRF)
 
@@ -309,7 +310,7 @@ Iron is counted as Fe2O3, manganese as MnO.
 
 ### 7.7 Check the correction
 
-- In the internal-standard sheet of the export, the IS element in each sample must equal its EPMA value (e.g. Si28 for VG-B1 = 247,741.5 ppm). If not, the rows are misaligned.
+- In the internal-standard sheet of the export, the IS element in each sample must equal its EPMA value (e.g. Si28 for VG-B1 = 247,741.5 ppm). If not, the sheet holds the wrong value for that sample.
 - Secondary standards should agree with `SRM.xlsx` (section 9; for fused beads see 8.5).
 
 ---
@@ -406,7 +407,8 @@ For each session, before using sample results:
 | *Average* does nothing; error log shows "Length mismatch" | Selection found more or fewer peaks than there are names | Case A: use Iolite selection with the synthetic log. Case B: check Start time and the Iolite log covers the same run |
 | "X not in peak names" | Standard dropdown name does not match any peak | Make names match `SRM.xlsx` exactly (case, hyphens) |
 | Internal Std Correction does nothing | Internal standard sheet empty | Run the tool (7.5) and re-import |
-| IS-corrected IS element ≠ EPMA value | Rows misaligned in the internal standard sheet | Regenerate with the tool; don't hand-edit row order |
+| Internal Std Correction shows "Internal standard sheet does not match the peaks" | A sample has no row, a value is blank, or per-spot rows are out of run order | Follow the message; regenerate with the tool (7.5) and re-import |
+| IS-corrected IS element ≠ EPMA value | Wrong value in the internal standard sheet (or rows misaligned, with the original Ilaps) | Regenerate with the tool (7.5) |
 | Report / Export stats do nothing | pandas 2.x installed | `ilaps/bin/pip install "pandas<2"` |
 | Export stats fails after Report | Report replaced numbers with `< LoD` text | Re-import, process again, run Export stats before Report |
 | Element shows `< LoD` everywhere | Calibrant has no value for that element in `SRM.xlsx` | Add the value, or calibrate on a standard that has it |

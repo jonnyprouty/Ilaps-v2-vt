@@ -443,7 +443,7 @@ li { margin:3px 0; }
 <li>Rerunning replaces the internal standard sheet; names and total-sum sheets are kept.</li>
 <li>Ilaps reads the Param file at import: after updating it, <strong>import again</strong> in Ilaps.</li>
 </ul>
-<p><strong>Why use the tool instead of typing the sheet by hand:</strong> Ilaps applies internal standard values <strong>by row position, not by name</strong>. The sheet must have exactly one row per peak, in run order, with <strong>every calibrant peak left out</strong>. One missing or extra row shifts every later value onto the wrong spot, and Ilaps gives no warning. If you must edit by hand, keep that structure:</p>
+<p><strong>How Ilaps matches the sheet to the spots</strong> (lab version of Ilaps, with our imgMS fork): the tool writes one row per peak in run order, with every calibrant peak left out, and Ilaps uses those rows in order. A sheet typed by hand can instead have <strong>one row per sample name</strong>, in any order; Ilaps then matches rows by name, and extra rows (such as the calibrant) are ignored:</p>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -459,23 +459,19 @@ li { margin:3px 0; }
 <td>10005.7</td>
 </tr>
 <tr>
-<td>SDC-1</td>
-<td>307573.4</td>
-<td>10005.7</td>
+<td>VG-B1</td>
+<td>247741.5</td>
+<td>65752.0</td>
 </tr>
 <tr>
 <td>…</td>
 <td></td>
 <td></td>
 </tr>
-<tr>
-<td>VG-B1</td>
-<td>247741.5</td>
-<td>65752.0</td>
-</tr>
 </tbody>
 </table></div>
 <p>(header row = isotopes; values in element ppm; secondary standards use their <code>SRM.xlsx</code> values.)</p>
+<p>Different values for repeat spots of one sample (e.g. EPMA of each spot) only work in the one-row-per-peak, run-order form. If the sheet fits neither form (a sample missing, a blank value, rows out of order), <strong>Internal Std Correction</strong> stops with a message saying what does not match, rather than applying values to the wrong spots. The original Ilaps (upstream imgMS 0.2.12) uses rows by position only and gives no warning; with it, use the tool.</p>
 <h3 id="76-total-sum-correction-when-there-is-no-epma-or-xrf">7.6 Total sum correction (when there is no EPMA or XRF)</h3>
 <p>Assumes the major-element oxides of each spot add up to 100%. Good for anhydrous silicates and glasses; poor for hydrous, carbonate-, sulfide- or halogen-rich material. For fused beads, see 8.3 and 8.4 first.</p>
 <p>In <strong>TS settings</strong>:</p>
@@ -487,7 +483,7 @@ li { margin:3px 0; }
 <p>Iron is counted as Fe2O3, manganese as MnO.</p>
 <h3 id="77-check-the-correction">7.7 Check the correction</h3>
 <ul>
-<li>In the internal-standard sheet of the export, the IS element in each sample must equal its EPMA value (e.g. Si28 for VG-B1 = 247,741.5 ppm). If not, the rows are misaligned.</li>
+<li>In the internal-standard sheet of the export, the IS element in each sample must equal its EPMA value (e.g. Si28 for VG-B1 = 247,741.5 ppm). If not, the sheet holds the wrong value for that sample.</li>
 <li>Secondary standards should agree with <code>SRM.xlsx</code> (section 9; for fused beads see 8.5).</li>
 </ul>
 <hr />
@@ -646,9 +642,14 @@ li { margin:3px 0; }
 <td>Run the tool (7.5) and re-import</td>
 </tr>
 <tr>
+<td>Internal Std Correction shows "Internal standard sheet does not match the peaks"</td>
+<td>A sample has no row, a value is blank, or per-spot rows are out of run order</td>
+<td>Follow the message; regenerate with the tool (7.5) and re-import</td>
+</tr>
+<tr>
 <td>IS-corrected IS element ≠ EPMA value</td>
-<td>Rows misaligned in the internal standard sheet</td>
-<td>Regenerate with the tool; don't hand-edit row order</td>
+<td>Wrong value in the internal standard sheet (or rows misaligned, with the original Ilaps)</td>
+<td>Regenerate with the tool (7.5)</td>
 </tr>
 <tr>
 <td>Report / Export stats do nothing</td>

@@ -17,6 +17,8 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
 
 **Fused glass beads** (samples and standards fused with lithium borate flux, e.g. XRF beads): also follow section 8. It changes which elements can be reported, which internal standard to use, and how to compare standards.
 
+**Calibration on NIST glasses without XRF** (NIST SRM 610/612 as calibrant; internal standard from EPMA, a known composition, or total sum): also follow section 9.
+
 ---
 
 ## 2. One-time setup
@@ -46,7 +48,7 @@ Both cases end in the same Ilaps workflow: calibrate on a reference material, co
 
 - **Gas blank before every spot.** At least about 30 s with the laser off; the current method uses about 60 s. Ilaps measures each spot's background from the readings just before and just after it.
 - **Calibrant.** At least 2 spots of the calibration reference material, ideally at the **start, middle and end** of the session.
-- **Secondary standards.** At least one other reference material treated as an unknown, to check accuracy (section 9).
+- **Secondary standards.** At least one other reference material treated as an unknown, to check accuracy (section 10).
 - **Same session.** Calibrate samples only against standards from the same day and session. Process each day separately.
 - **Names.** Peak names must match exactly. Use the same spelling for repeats of a sample (`VG-A1` three times, not `VG-A1`, `VG A1`, `vg-a1`). Standards must match their `SRM.xlsx` row name.
 - **Case A file names:** `YYYYMMDD-HHMM-NAME.txt`, e.g. `20261028-1407-USGS-BCR-2.txt`. The peak name is taken from everything after the date and time, with `USGS-` removed.
@@ -303,7 +305,7 @@ Iron is counted as Fe2O3, manganese as MnO.
 ### 7.7 Check the correction
 
 - In the internal-standard sheet of the export, the IS element in each sample must equal its EPMA value (e.g. Si28 for VG-B1 = 247,741.5 ppm). If not, the sheet holds the wrong value for that sample.
-- Secondary standards should agree with `SRM.xlsx` (section 9; for fused beads see 8.5).
+- Secondary standards should agree with `SRM.xlsx` (section 10; for fused beads see 8.5, for NIST glass calibration see 9.4).
 
 ---
 
@@ -376,7 +378,46 @@ Oct 2026 example: SBC-1 (a shale) has major oxides summing to about 89%. Its tot
 
 ---
 
-## 9. Quality control
+## 9. Calibration on NIST glasses without XRF
+
+This section applies when the samples have no XRF analysis of the same material and the calibrant is a NIST SRM 61x glass. Sections 4–7 apply unchanged; section 8 applies only to fused beads.
+
+### 9.1 Calibrant
+
+- **NIST610** is the calibrant of choice: most trace elements are present at about 250–500 µg/g (median about 430 µg/g in `SRM.xlsx`). **NIST612** (mostly 30–40 µg/g) can serve as calibrant for low-level trace elements or as a secondary standard. **NIST614** (about 1 µg/g or less for many elements) is too dilute to calibrate on.
+- Reference values for NIST610, NIST612 and NIST614 are in `SRM.xlsx` and cover all major elements. Name the standard spots exactly `NIST610`, `NIST612` (not `NIST 610` or `SRM610`); single-spot imports remove only `USGS-` from file names (section 3).
+- NIST610 is a soda-lime-silica glass (from `SRM.xlsx`: about 69.7 wt% SiO2, 13.4 wt% Na2O, 11.4 wt% CaO and 2.0 wt% Al2O3). Mg, Fe, K, Ti, P and Mn are present only at 410–465 µg/g. Consequences:
+  - In samples with percent-level Mg, Fe, K, Ti, P or Mn, these elements are calibrated by extrapolating one to two orders of magnitude above the calibrant concentration.
+  - The calibrant matrix differs from silicate rocks and minerals, so differences in ablation behaviour are not corrected by the calibration alone.
+  - Results for these elements are verified on a matrix-matched secondary standard (9.4) before use.
+- NIST glasses are anhydrous, so the volatile-free versus as-received distinction of section 8.5 does not arise for them.
+
+### 9.2 Internal standard without XRF
+
+| Source | When to use | How |
+|---|---|---|
+| **EPMA of the same material** (preferred) | Glasses, minerals and beads analysed by EPMA, ideally at or next to the laser spot | Table of sample name and oxide wt% (7.3), then **Load internal standard...** (7.5). Si or Ca is usually used; for minerals, an element measured by EPMA on the same grain. |
+| **Known composition** | Phases of fixed or independently known composition (e.g. SiO2 in quartz, CaO in a characterised mineral) | Enter the known oxide value in the same table (7.3) and load it (7.5). State the assumed value with the results. |
+| **Total sum** (7.6) | No independent value is available and the material is anhydrous (silicate glasses, anhydrous silicate minerals) | All major elements must be measured (Si, Ti, Al, Fe, Mn, Mg, Ca, Na, K, P). Not suitable for hydrous (e.g. amphibole, mica), carbonate- or sulfide-bearing material unless the volatile content is known and subtracted from **Total sum [ppm]**. |
+
+With an internal standard loaded, the NIST secondary standards take their internal standard values from `SRM.xlsx` automatically (7.5); they need no row in the table.
+
+### 9.3 Session design
+
+- Run the calibrant (2–3 spots) at the **start, middle and end** of the session, and process each session separately (section 3).
+- Use the same spot size, fluence and repetition rate for standards and samples.
+- **Drift Correction** may be used only when the calibrant brackets the samples in this way (6.3).
+
+### 9.4 Secondary standards and accuracy
+
+- **NIST612** treated as an unknown checks trace elements, but it has the same matrix as the calibrant and low major-element concentrations, so it tests neither matrix effects nor the calibration of major elements.
+- Include at least one **matrix-matched reference glass** treated as an unknown, e.g. a basaltic glass (BCR-2G, BHVO-2G or GSD-1G). Its recoveries are the accuracy estimate for the samples, particularly for Mg, Fe, K, Ti, P and Mn (9.1).
+- These glasses are not yet in `SRM.xlsx`. Add them as described in section 2 (element µg/g, blanks for unknown values), using compiled reference values (e.g. GeoReM preferred values), and record the source.
+- Report the secondary-standard recoveries with the data (section 10).
+
+---
+
+## 10. Quality control
 
 For each session, before using sample results:
 
@@ -389,7 +430,7 @@ For each session, before using sample results:
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|

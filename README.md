@@ -14,6 +14,7 @@ Changes from the original:
 
 - **Import single-spot runs** (Home screen): Agilent runs with one spot each are joined into one file per day, with a synthetic Iolite log and a Param file, and imported. The same step is available outside Ilaps as `tools/make_iolite.py` (Python 3 standard library only).
 - **Load internal standard** (Bulk analysis): internal standard values from an XRF or EPMA table (sample name and oxide wt%), converted to element µg/g, with reference materials taken from `SRM.xlsx`.
+- **Edit peaks** (Data analysis): adjust the signal window of individual spots or exclude intervals. Removed readings are used neither as signal nor as background, and edits are saved and recorded in exports.
 - Errors are shown in a pop-up instead of only in the error log.
 - Fixes: the data table no longer rounds the time axis of the imported data (this shifted peak windows); Despiking `False` now takes effect; export file names without an extension are accepted.
 - Built-in total-sum factors cover all common isotopes (Ca43 was missing).

@@ -43,7 +43,7 @@ li { margin:3px 0; }
 <main><h1 id="sop-la-icp-ms-spot-data-reduction-in-ilaps">SOP: LA-ICP-MS spot data reduction in Ilaps</h1>
 <p><strong>Scope:</strong> bulk (spot) analyses from the laboratory's Agilent ICP-MS, reduced to concentrations (µg/g, ppm) in Ilaps-v2. Imaging and line scans are not covered.
 <strong>Applies to:</strong> all reduction of laser ablation data in the laboratory.
-<strong>Written:</strong> 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps.</p>
+<strong>Written:</strong> 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps. Updated 2026-11-23: manual peak editing.</p>
 <hr />
 <h2 id="1-choice-of-procedure">1. Choice of procedure</h2>
 <div class="tbl"><table>
@@ -235,9 +235,21 @@ li { margin:3px 0; }
 <li>Choose the <strong>Iolite</strong> tab.</li>
 <li><strong>Start time:</strong> Case A: the value in the tool's report (<code>0.60</code>). Case B: see 5.3.</li>
 <li><strong>Set names from iolite:</strong> leave unchecked when a Param file was imported (names then come from it); tick it when there is no Param file (Case B, 5.2). For Case A both give the same names.</li>
-<li>Leave <strong>Skip background</strong> and <strong>Skip peak</strong> empty. A non-zero <em>Skip peak</em> halved the averages in testing, because the peak edges are treated as background.</li>
+<li>Leave <strong>Skip background</strong> and <strong>Skip peak</strong> empty. A non-zero <em>Skip peak</em> halved the averages in testing, because the peak edges are treated as background. To trim a spot, use <strong>Edit peaks...</strong> (6.2.1).</li>
 <li>Click <strong>Select</strong>. Check the plot: one start/end pair per spot, on the edges of each peak. Tick <strong>log axes</strong> to see the blanks.</li>
 </ol>
+<h3 id="621-manual-adjustment-of-peak-windows-optional">6.2.1 Manual adjustment of peak windows (optional)</h3>
+<p>After <strong>Select</strong>, click <strong>Edit peaks...</strong>. Each spot is displayed separately, with signal in green and removed readings in grey. <strong>Show</strong> selects the sum of all isotopes or one isotope.</p>
+<ol>
+<li>Choose the spot with the list or <strong>Previous</strong> / <strong>Next</strong>. Edited spots are marked <code>*</code>.</li>
+<li><strong>Move the signal edges:</strong> drag a blue line, or enter the start and end times (s). Values snap to the nearest reading.</li>
+<li><strong>Exclude an interval</strong> (e.g. an inclusion or a transient within the signal): switch on <strong>Exclude interval</strong> and drag across the readings. Right-click an excluded interval to restore it; <strong>Clear exclusions</strong> restores all of them for the spot.</li>
+<li><strong>Reset spot</strong> or <strong>Reset all</strong> returns to the automatic windows.</li>
+<li><strong>Save edits...</strong> writes a <code>.json</code> file (by default <code>&lt;data file&gt;_peak_edits.json</code>). <strong>Load edits...</strong> restores it after <strong>Select</strong> on the same data; a file with a different number of peaks or different names is rejected.</li>
+<li>Close the editor and run <strong>Average</strong> and <strong>Quantification</strong> again. Changing a window clears earlier results.</li>
+</ol>
+<p>Readings removed from a spot are used <strong>neither as signal nor as background</strong>; the blank on each side of the spot is unchanged. Spots that were not edited give the same results as without the editor. A window cannot overlap a neighbouring spot, and at least 3 readings of signal must remain. Selecting again discards the edits, after confirmation.</p>
+<p>Edits apply to bulk analysis, not to elemental maps. Use Method <code>intensity</code>: with <code>integral</code>, a shortened window lowers the result. Apply one documented criterion to samples and standards, and record the reason for each edit. Export and Export stats list every edit in a <code>peak_edits</code> sheet.</p>
 <h3 id="63-averaging-and-calibration-bulk-analysis-screen">6.3 Averaging and calibration (Bulk analysis screen)</h3>
 <p>Settings:</p>
 <div class="tbl"><table>
@@ -647,7 +659,8 @@ li { margin:3px 0; }
 <li><strong>Secondary standards:</strong> compare the mean of each secondary standard to <code>SRM.xlsx</code>. Suggested acceptance criteria (to be set by the laboratory): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
    Reference result (Oct 28 2026, BCR-2 calibrant, Si28 internal standard): AGV-2a median recovery 1.01; Si 1.00, Ca 1.03, Fe 1.00, Sr 1.03, La 1.01.</li>
 <li><strong>Repeats:</strong> use the <code>2*std</code> rows in the <em>Export stats</em> <code>Stats</code> sheet; investigate spots shown in red in <code>Outliers</code>.</li>
-<li><strong>Keep for the record:</strong> the raw runs, the combined/Param/Iolite files, the EPMA table, both exports, and a note of the settings used (calibrant, IS isotope, TS settings).</li>
+<li><strong>Manual edits:</strong> review the <code>peak_edits</code> sheet of the export, if present, and report which spots were edited and why (6.2.1).</li>
+<li><strong>Keep for the record:</strong> the raw runs, the combined/Param/Iolite files, any peak edits file, the EPMA table, both exports, and a note of the settings used (calibrant, IS isotope, TS settings).</li>
 </ol>
 <hr />
 <h2 id="11-troubleshooting">11. Troubleshooting</h2>
@@ -704,6 +717,11 @@ li { margin:3px 0; }
 <td>Report / Export stats do nothing</td>
 <td>Original imgMS with pandas 2.x</td>
 <td>Install the laboratory imgMS (section 2), or <code>ilaps/bin/pip install "pandas&lt;2"</code></td>
+</tr>
+<tr>
+<td>Result tables are empty after editing or selecting peaks</td>
+<td>The windows changed, so earlier results were cleared</td>
+<td>Run Average and Quantification again (6.2.1)</td>
 </tr>
 <tr>
 <td>Export stats fails after Report</td>

@@ -2,7 +2,7 @@
 
 **Scope:** bulk (spot) analyses from the laboratory's Agilent ICP-MS, reduced to concentrations (µg/g, ppm) in Ilaps-v2. Imaging and line scans are not covered.
 **Applies to:** all reduction of laser ablation data in the laboratory.
-**Written:** 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps.
+**Written:** 2026-11-04, tested on the October 2026 Victor sample set (USGS reference materials plus VG samples, all as lithium borate fused beads). Fused-bead section added 2026-11-04. Updated 2026-11-20: Make Iolite log, single-spot import and internal standard loading in Ilaps. Updated 2026-11-23: manual peak editing.
 
 ---
 
@@ -163,8 +163,23 @@ Click **Import**. Ilaps switches to *Data analysis* and plots the signal. Use th
 1. Choose the **Iolite** tab.
 2. **Start time:** Case A: the value in the tool's report (`0.60`). Case B: see 5.3.
 3. **Set names from iolite:** leave unchecked when a Param file was imported (names then come from it); tick it when there is no Param file (Case B, 5.2). For Case A both give the same names.
-4. Leave **Skip background** and **Skip peak** empty. A non-zero *Skip peak* halved the averages in testing, because the peak edges are treated as background.
+4. Leave **Skip background** and **Skip peak** empty. A non-zero *Skip peak* halved the averages in testing, because the peak edges are treated as background. To trim a spot, use **Edit peaks...** (6.2.1).
 5. Click **Select**. Check the plot: one start/end pair per spot, on the edges of each peak. Tick **log axes** to see the blanks.
+
+### 6.2.1 Manual adjustment of peak windows (optional)
+
+After **Select**, click **Edit peaks...**. Each spot is displayed separately, with signal in green and removed readings in grey. **Show** selects the sum of all isotopes or one isotope.
+
+1. Choose the spot with the list or **Previous** / **Next**. Edited spots are marked `*`.
+2. **Move the signal edges:** drag a blue line, or enter the start and end times (s). Values snap to the nearest reading.
+3. **Exclude an interval** (e.g. an inclusion or a transient within the signal): switch on **Exclude interval** and drag across the readings. Right-click an excluded interval to restore it; **Clear exclusions** restores all of them for the spot.
+4. **Reset spot** or **Reset all** returns to the automatic windows.
+5. **Save edits...** writes a `.json` file (by default `<data file>_peak_edits.json`). **Load edits...** restores it after **Select** on the same data; a file with a different number of peaks or different names is rejected.
+6. Close the editor and run **Average** and **Quantification** again. Changing a window clears earlier results.
+
+Readings removed from a spot are used **neither as signal nor as background**; the blank on each side of the spot is unchanged. Spots that were not edited give the same results as without the editor. A window cannot overlap a neighbouring spot, and at least 3 readings of signal must remain. Selecting again discards the edits, after confirmation.
+
+Edits apply to bulk analysis, not to elemental maps. Use Method `intensity`: with `integral`, a shortened window lowers the result. Apply one documented criterion to samples and standards, and record the reason for each edit. Export and Export stats list every edit in a `peak_edits` sheet.
 
 ### 6.3 Averaging and calibration (Bulk analysis screen)
 
@@ -426,7 +441,8 @@ For each session, before using sample results:
 3. **Secondary standards:** compare the mean of each secondary standard to `SRM.xlsx`. Suggested acceptance criteria (to be set by the laboratory): major elements within ±5%, most trace elements within ±10%. Report the recoveries with the data.
    Reference result (Oct 28 2026, BCR-2 calibrant, Si28 internal standard): AGV-2a median recovery 1.01; Si 1.00, Ca 1.03, Fe 1.00, Sr 1.03, La 1.01.
 4. **Repeats:** use the `2*std` rows in the *Export stats* `Stats` sheet; investigate spots shown in red in `Outliers`.
-5. **Keep for the record:** the raw runs, the combined/Param/Iolite files, the EPMA table, both exports, and a note of the settings used (calibrant, IS isotope, TS settings).
+5. **Manual edits:** review the `peak_edits` sheet of the export, if present, and report which spots were edited and why (6.2.1).
+6. **Keep for the record:** the raw runs, the combined/Param/Iolite files, any peak edits file, the EPMA table, both exports, and a note of the settings used (calibrant, IS isotope, TS settings).
 
 ---
 
@@ -443,6 +459,7 @@ For each session, before using sample results:
 | Internal Std Correction shows "Internal standard sheet does not match the peaks" | A sample has no row, a value is blank, or per-spot rows are out of run order | Follow the message; load the internal standard again (7.5) |
 | IS-corrected IS element ≠ EPMA value | Wrong value in the table or sheet (or rows misaligned, with the original Ilaps) | Check the table; load again (7.5) |
 | Report / Export stats do nothing | Original imgMS with pandas 2.x | Install the laboratory imgMS (section 2), or `ilaps/bin/pip install "pandas<2"` |
+| Result tables are empty after editing or selecting peaks | The windows changed, so earlier results were cleared | Run Average and Quantification again (6.2.1) |
 | Export stats fails after Report | Report replaced numbers with `< LoD` text | Re-import, process again, run Export stats before Report |
 | Element shows `< LoD` everywhere | Calibrant has no value for that element in `SRM.xlsx` | Add the value, or calibrate on a standard that has it |
 | Values negative or drifting through the day | Drift Correction checked with poor calibrant spacing | Uncheck it (6.3) |

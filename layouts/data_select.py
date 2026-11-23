@@ -3,6 +3,7 @@ from PySide2.QtWidgets import *
 from PySide2 import QtGui
 from PySide2.QtCore import Qt
 from widgets.tab_select import SelectTab
+from widgets.peak_editor import PeakEditor
 
 import numpy as np
 
@@ -13,6 +14,7 @@ from matplotlib.figure import Figure
 from imgMS import MSData as msd
 from imgMS import MSEval as mse
 from imgMS.side_functions import *
+import error_popup
 
 
 class DataSelect(QWidget):
@@ -65,6 +67,11 @@ class DataSelect(QWidget):
         self.settingsLayout.addWidget(self.selectBtn, alignment=Qt.AlignCenter)
         self.selectBtn.clicked.connect(self.select_data)
 
+        self.editPeaksBtn = QPushButton('Edit peaks...')
+        self.editPeaksBtn.setToolTip('Adjust the signal window of individual spots, or exclude intervals.')
+        self.settingsLayout.addWidget(self.editPeaksBtn, alignment=Qt.AlignCenter)
+        self.editPeaksBtn.clicked.connect(self.edit_peaks)
+
         self.settingsLayout.addStretch(1)
 
         self.fig = Figure()
@@ -86,7 +93,36 @@ class DataSelect(QWidget):
         """
         return self.mainWidget
 
+    def edit_peaks(self):
+        """
+        Open the manual peak editor; replot and clear earlier results if anything changed.
+        """
+        data = self.parent.Data
+        if data is None or not data.laser_on:
+            error_popup.notify('Import the data and click Select before editing peaks.')
+            return
+        had_results = data.means is not None
+        editor = PeakEditor(self.parent, data, self.parent.welcome.dataEntry1.text().strip())
+        editor.exec_()
+        if not editor.changed:
+            return
+        self.parent.bulk_analysis.clear_results()
+        self.ax.clear()
+        data.graph(ax=self.ax, logax=self.logaxisBox.isChecked())
+        self.ax.figure.canvas.draw_idle()
+        if had_results:
+            QMessageBox.information(self, 'Peaks edited', 'The peak windows changed, so earlier results were '
+                                    'cleared. Run Average and Quantification again.')
+
     def select_data(self):
+        # a new selection replaces the peaks, and with them any manual edits
+        data = self.parent.Data
+        if data is not None and data.peak_edits:
+            answer = QMessageBox.question(
+                self, 'Select again', f'Selecting again discards the manual edits of {len(data.peak_edits)} '
+                'spot(s). Continue?', QMessageBox.Yes | QMessageBox.No)
+            if answer != QMessageBox.Yes:
+                return
 
         # get skip values if given
         if self.skipBcgStart.text().isdigit():
@@ -132,6 +168,7 @@ class DataSelect(QWidget):
 
         # select data
         self.parent.Data.select(method=method, selector=selector)
+        self.parent.bulk_analysis.clear_results()  # results of the previous selection no longer apply
 
         # set names from iolite if checked
         if self.select.namesCheckBox.isChecked():

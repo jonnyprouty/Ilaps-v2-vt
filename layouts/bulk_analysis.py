@@ -200,6 +200,13 @@ class BulkAnalysis(QWidget):
 
         self.table.show_tab(2)
 
+    def clear_results(self):
+        """
+        Empty the result tables after the peak windows change.
+        """
+        for name in ('Average', 'Quantified', 'Internal Std', 'Total Sum'):
+            self.table.table[name].setModel(None)
+
     def load_internal_std(self):
         """
         Build the internal standard sheet from an XRF/EPMA table and SRM.xlsx and attach it to the data.
